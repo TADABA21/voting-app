@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -66,9 +67,17 @@
     }
 
     @keyframes gradientBorder {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
     }
 
     .header {
@@ -222,8 +231,15 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* Loading animation */
@@ -261,6 +277,7 @@
         height: 0;
         opacity: 1;
       }
+
       100% {
         top: -1px;
         left: -1px;
@@ -297,16 +314,16 @@
       body {
         padding: 15px;
       }
-      
+
       .container {
         padding: 20px;
       }
-      
+
       .header {
         flex-direction: column;
         align-items: flex-start;
       }
-      
+
       .header .btn {
         margin-top: 15px;
       }
@@ -320,42 +337,44 @@
         --text: #f0f0f0;
         --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
       }
-      
+
       .result-item {
         background-color: #292929;
       }
-      
+
       .result-bar-container {
         background-color: #333333;
       }
-      
+
       .message {
         background-color: #292929;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="header">
       <h1>Election Results</h1>
       <a href="/login" class="btn">Login</a>
     </div>
-    
+
     <div id="loadingMessage" class="loading-container">
       <div class="loading">
         <div></div>
         <div></div>
       </div>
     </div>
-    
+
     <div id="resultsSection" class="results" style="display: none;">
       <h2>Current Standings</h2>
       <div id="resultsList"></div>
       <p id="totalVotes"></p>
-      
+
       <button class="refresh-btn" onclick="fetchResults()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M23 4v6h-6"></path>
           <path d="M1 20v-6h6"></path>
           <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
@@ -364,83 +383,98 @@
         Refresh Results
       </button>
     </div>
-    
+
     <div id="messageContainer"></div>
   </div>
-  
+
   <script>
     // Fetch voting results
+    // Update fetchResults function in results.html
     async function fetchResults() {
       try {
         document.getElementById("loadingMessage").style.display = "flex";
         document.getElementById("resultsSection").style.display = "none";
-        
+
         const res = await fetch("/api/results");
-        
+
         if (!res.ok) {
           throw new Error("Failed to fetch results");
         }
-        
+
         const data = await res.json();
         const resultsList = document.getElementById("resultsList");
         resultsList.innerHTML = "";
-        
+
         if (!data.results || data.results.length === 0) {
           resultsList.innerHTML = `
-            <div class="result-item" style="text-align: center;">
-              <p>No results available yet.</p>
-            </div>
-          `;
+        <div class="result-item" style="text-align: center;">
+          <p>No results available yet.</p>
+        </div>
+      `;
           document.getElementById("loadingMessage").style.display = "none";
           document.getElementById("resultsSection").style.display = "block";
           return;
         }
-        
-        // Calculate total votes for percentage
+
+        // Display results by position
         let totalVotes = 0;
-        data.results.forEach(result => {
-          totalVotes += result.count;
+        data.results.forEach(positionResult => {
+          totalVotes += positionResult.totalVotes;
+
+          const positionSection = document.createElement("div");
+          positionSection.style.marginBottom = "30px";
+
+          const positionTitle = document.createElement("h3");
+          positionTitle.style.fontSize = "18px";
+          positionTitle.style.fontWeight = "600";
+          positionTitle.style.color = "var(--primary-color)";
+          positionTitle.style.marginBottom = "15px";
+          positionTitle.style.paddingBottom = "5px";
+          positionTitle.style.borderBottom = "2px solid var(--primary-color)";
+          positionTitle.textContent = `${positionResult._id} (${positionResult.totalVotes} votes)`;
+          positionSection.appendChild(positionTitle);
+
+          // Sort candidates by vote count (descending)
+          positionResult.candidates.sort((a, b) => b.count - a.count);
+
+          positionResult.candidates.forEach((candidate, index) => {
+            const percentage = positionResult.totalVotes > 0 ?
+              (candidate.count / positionResult.totalVotes * 100).toFixed(1) : 0;
+
+            const resultItem = document.createElement("div");
+            resultItem.className = "result-item";
+
+            // Add a leading position for the top 3
+            let positionLabel = '';
+            if (index === 0 && candidate.count > 0) {
+              positionLabel = '<span style="color: gold; margin-right: 5px;">🏆</span>';
+            } else if (index === 1 && candidate.count > 0) {
+              positionLabel = '<span style="color: silver; margin-right: 5px;">🥈</span>';
+            } else if (index === 2 && candidate.count > 0) {
+              positionLabel = '<span style="color: #cd7f32; margin-right: 5px;">🥉</span>';
+            }
+
+            resultItem.innerHTML = `
+          <div class="candidate-info">
+            <span class="candidate-name">${positionLabel}${candidate.name}</span>
+            <span class="candidate-stats">${candidate.count} vote${candidate.count !== 1 ? 's' : ''} (${percentage}%)</span>
+          </div>
+          <div class="result-bar-container">
+            <div class="result-bar" style="width: 0%"></div>
+          </div>
+        `;
+            positionSection.appendChild(resultItem);
+
+            // Animate the bar after a short delay
+            setTimeout(() => {
+              resultItem.querySelector(".result-bar").style.width = `${percentage}%`;
+            }, 100 * index);
+          });
+
+          resultsList.appendChild(positionSection);
         });
-        
+
         document.getElementById("totalVotes").textContent = `Total votes: ${totalVotes}`;
-        
-        // Sort results by vote count (descending)
-        data.results.sort((a, b) => b.count - a.count);
-        
-        // Create result bars with animation
-        data.results.forEach((result, index) => {
-          const percentage = totalVotes > 0 ? (result.count / totalVotes * 100).toFixed(1) : 0;
-          
-          const div = document.createElement("div");
-          div.className = "result-item";
-          
-          // Add a leading position for the top 3
-          let positionLabel = '';
-          if (index === 0 && result.count > 0) {
-            positionLabel = '<span style="color: gold; margin-right: 5px;">🏆</span>';
-          } else if (index === 1 && result.count > 0) {
-            positionLabel = '<span style="color: silver; margin-right: 5px;">🥈</span>';
-          } else if (index === 2 && result.count > 0) {
-            positionLabel = '<span style="color: #cd7f32; margin-right: 5px;">🥉</span>';
-          }
-          
-          div.innerHTML = `
-            <div class="candidate-info">
-              <span class="candidate-name">${positionLabel}${result.candidateName}</span>
-              <span class="candidate-stats">${result.count} vote${result.count !== 1 ? 's' : ''} (${percentage}%)</span>
-            </div>
-            <div class="result-bar-container">
-              <div class="result-bar" style="width: 0%"></div>
-            </div>
-          `;
-          resultsList.appendChild(div);
-          
-          // Animate the bar after a short delay
-          setTimeout(() => {
-            div.querySelector(".result-bar").style.width = `${percentage}%`;
-          }, 100 * index);
-        });
-        
         document.getElementById("loadingMessage").style.display = "none";
         document.getElementById("resultsSection").style.display = "block";
       } catch (error) {
@@ -448,7 +482,7 @@
         showMessage("Failed to load results", "error");
       }
     }
-    
+
     // Show message
     function showMessage(message, type) {
       const container = document.getElementById("messageContainer");
@@ -457,24 +491,25 @@
       div.textContent = message;
       container.innerHTML = "";
       container.appendChild(div);
-      
+
       // Auto hide after 5 seconds
       setTimeout(() => {
         div.style.opacity = "0";
         div.style.transform = "translateY(-10px)";
         div.style.transition = "opacity 0.3s, transform 0.3s";
-        
+
         setTimeout(() => {
           container.innerHTML = "";
         }, 300);
       }, 5000);
     }
-    
+
     // Initialize
     fetchResults();
-    
+
     // Refresh results every 30 seconds
     const refreshInterval = setInterval(fetchResults, 30000);
   </script>
 </body>
+
 </html>

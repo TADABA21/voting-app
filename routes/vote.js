@@ -53,9 +53,8 @@ router.get("/check", verifyToken, (req, res) => {
 // Get all candidates for voting
 router.get("/candidates", async (req, res) => {
   try {
-    const candidates = await Candidate.find({}).select("name");
-    const candidateNames = candidates.map(c => c.name);
-    res.json({ candidates: candidateNames });
+    const candidates = await Candidate.find({}).select("name position imageUrl");
+    res.json({ candidates });
   } catch (err) {
     res.status(500).json({ 
       message: "Error fetching candidates", 
@@ -117,7 +116,7 @@ router.post("/submit", verifyToken, async (req, res) => {
 // Get voting results
 router.get("/results", verifyToken, async (req, res) => {
   try {
-    // Group votes by candidate and count them
+    // Group votes by position and candidate
     const results = await Vote.aggregate([
       {
         $lookup: {
@@ -130,12 +129,28 @@ router.get("/results", verifyToken, async (req, res) => {
       { $unwind: "$candidateInfo" },
       {
         $group: {
-          _id: "$candidate",
-          candidateName: { $first: "$candidateInfo.name" },
+          _id: {
+            position: "$candidateInfo.position",
+            candidateName: "$candidateInfo.name",
+            candidateImage: "$candidateInfo.imageUrl"
+          },
           count: { $sum: 1 }
         }
       },
-      { $sort: { count: -1 } }
+      {
+        $group: {
+          _id: "$_id.position",
+          candidates: {
+            $push: {
+              name: "$_id.candidateName",
+              imageUrl: "$_id.candidateImage",
+              count: "$count"
+            }
+          },
+          totalVotes: { $sum: "$count" }
+        }
+      },
+      { $sort: { "_id": 1 } }
     ]);
     
     res.json({ results });

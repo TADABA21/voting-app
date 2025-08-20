@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,7 +38,7 @@
 
     .container {
       width: 100%;
-      max-width: 600px;
+      max-width: 700px;
       background-color: var(--card-bg);
       border-radius: var(--border-radius);
       box-shadow: var(--shadow);
@@ -66,9 +67,17 @@
     }
 
     @keyframes gradientBorder {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
     }
 
     .header {
@@ -90,7 +99,8 @@
       background-color: #eee;
     }
 
-    h1, h2 {
+    h1,
+    h2 {
       color: var(--text);
       font-weight: 600;
     }
@@ -157,10 +167,184 @@
       font-size: 16px;
     }
 
+    .candidate-card {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      border: 3px solid #ddd;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      gap: 20px;
+      position: relative;
+      background: var(--card-bg);
+      overflow: hidden;
+    }
+
+    .candidate-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      border-color: #bbb;
+    }
+
+    .candidate-card.selected {
+      border-color: var(--primary-color);
+      background: linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(76, 175, 80, 0.15) 100%);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.2);
+      transform: translateY(-3px) scale(1.02);
+    }
+
+    .candidate-card.selected::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), #66BB6A);
+    }
+
+    .candidate-image {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #ddd;
+      transition: var(--transition);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .candidate-card:hover .candidate-image {
+      border-color: #aaa;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .candidate-card.selected .candidate-image {
+      border-color: var(--primary-color);
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+      transform: scale(1.05);
+    }
+
+    .candidate-placeholder {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: #999;
+      border: 3px solid #ddd;
+      transition: var(--transition);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .candidate-card:hover .candidate-placeholder {
+      border-color: #aaa;
+      background: linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .candidate-card.selected .candidate-placeholder {
+      border-color: var(--primary-color);
+      background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.3) 100%);
+      color: var(--primary-color);
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+      transform: scale(1.05);
+    }
+
+    .candidate-info {
+      flex-grow: 1;
+      padding: 5px 0;
+    }
+
+    .candidate-name {
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: var(--text);
+      transition: var(--transition);
+    }
+
+    .candidate-card.selected .candidate-name {
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+
+    .candidate-position {
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.8;
+    }
+
+    .candidate-card.selected .candidate-position {
+      color: var(--primary-color);
+      opacity: 1;
+    }
+
+    .candidate-check {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: bold;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: var(--transition);
+    }
+
+    .candidate-card.selected .candidate-check {
+      opacity: 1;
+      transform: scale(1);
+      animation: checkPop 0.3s ease-out;
+    }
+
+    @keyframes checkPop {
+      0% {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .position-section {
+      margin-bottom: 35px;
+    }
+
+    .position-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      padding: 12px 0;
+      border-bottom: 3px solid var(--primary-color);
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
     button {
       display: block;
       width: 100%;
-      padding: 12px 15px;
+      padding: 15px 20px;
       background-color: var(--primary-color);
       color: white;
       border: none;
@@ -171,7 +355,7 @@
       transition: var(--transition);
       position: relative;
       overflow: hidden;
-      margin-top: 20px;
+      margin-top: 25px;
     }
 
     button:hover:not(:disabled) {
@@ -225,8 +409,15 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .success {
@@ -345,7 +536,9 @@
     }
 
     @keyframes spin {
-      to { transform: translateY(-50%) rotate(360deg); }
+      to {
+        transform: translateY(-50%) rotate(360deg);
+      }
     }
 
     .btn-content {
@@ -388,12 +581,32 @@
         font-size: 20px;
       }
 
+      .candidate-card {
+        padding: 15px;
+        gap: 15px;
+      }
+
+      .candidate-image,
+      .candidate-placeholder {
+        width: 60px;
+        height: 60px;
+      }
+
+      .candidate-placeholder {
+        font-size: 20px;
+      }
+
+      .candidate-name {
+        font-size: 16px;
+      }
+
       .result-item {
         flex-direction: column;
         align-items: flex-start;
       }
 
-      .result-count, .result-percent {
+      .result-count,
+      .result-percent {
         margin-left: 0;
         margin-top: 5px;
       }
@@ -421,6 +634,29 @@
         background-color: rgba(76, 175, 80, 0.2);
       }
 
+      .candidate-card {
+        border-color: #444;
+      }
+
+      .candidate-image,
+      .candidate-placeholder {
+        border-color: #444;
+      }
+
+      .candidate-card:hover .candidate-image,
+      .candidate-card:hover .candidate-placeholder {
+        border-color: #666;
+      }
+
+      .candidate-placeholder {
+        background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+        color: #bbb;
+      }
+
+      .candidate-card:hover .candidate-placeholder {
+        background: linear-gradient(135deg, #333 0%, #222 100%);
+      }
+
       .result-item {
         border-color: #333;
       }
@@ -438,8 +674,20 @@
         border-color: #333;
       }
     }
+
+    /* Click feedback animation */
+    .candidate-card.clicked {
+      animation: clickFeedback 0.2s ease;
+    }
+
+    @keyframes clickFeedback {
+      0% { transform: translateY(-3px) scale(1.02); }
+      50% { transform: translateY(-1px) scale(0.98); }
+      100% { transform: translateY(-3px) scale(1.02); }
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="header">
@@ -448,17 +696,17 @@
         <span class="btn-content">Logout</span>
       </button>
     </div>
-    
+
     <div id="loadingSection" class="loading-container">
       <div class="loading-spinner"></div>
       <p>Loading...</p>
     </div>
-    
+
     <div id="votingSection" style="display: none;">
       <p class="user-welcome">Welcome, <span id="userEmail" class="user-email"></span>!</p>
-      
+
       <div id="messageContainer"></div>
-      
+
       <div id="notVotedSection">
         <h2>Select a Candidate</h2>
         <div id="candidatesList" class="candidates"></div>
@@ -467,33 +715,34 @@
           <span class="spinner"></span>
         </button>
       </div>
-      
+
       <div id="alreadyVotedSection" style="display: none;">
         <div class="alert success">
           You have already voted. Thank you for participating!
         </div>
       </div>
     </div>
-    
+
     <div id="resultsSection" class="results" style="display: none;">
       <h2>Election Results</h2>
       <div id="resultsList"></div>
     </div>
-    
+
     <div class="debug-toggle" onclick="toggleDebugInfo()">Show/Hide Debug Info</div>
     <div id="debugInfo" class="debug-info"></div>
   </div>
-  
+
   <script>
     const token = localStorage.getItem("token");
     let selectedCandidate = null;
-    
+    let selectedPosition = null;
+
     // Debug log function
     function debugLog(message, data = null) {
       const debugInfo = document.getElementById("debugInfo");
       const timestamp = new Date().toLocaleTimeString();
       let logMessage = `[${timestamp}] ${message}`;
-      
+
       if (data) {
         if (typeof data === 'object') {
           logMessage += `: ${JSON.stringify(data, null, 2)}`;
@@ -501,19 +750,19 @@
           logMessage += `: ${data}`;
         }
       }
-      
+
       const logEntry = document.createElement("div");
       logEntry.textContent = logMessage;
       debugInfo.appendChild(logEntry);
       console.log(message, data);
     }
-    
+
     // Toggle debug info visibility
     function toggleDebugInfo() {
       const debugInfo = document.getElementById("debugInfo");
       debugInfo.style.display = debugInfo.style.display === "none" ? "block" : "none";
     }
-    
+
     // Check authentication
     async function checkAuth() {
       debugLog("Checking authentication");
@@ -523,33 +772,33 @@
           window.location.href = "/login";
           return;
         }
-        
+
         debugLog("Sending auth check request", { tokenLength: token.length });
         const res = await fetch("/api/vote/check", {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         if (!res.ok) {
           const errorText = await res.text();
           debugLog("Auth check failed", { status: res.status, statusText: res.statusText, errorText });
           throw new Error("Authentication failed");
         }
-        
+
         const userData = await res.json();
         debugLog("Authentication successful", { email: userData.email, hasVoted: userData.hasVoted });
         document.getElementById("userEmail").textContent = userData.email;
-        
+
         // Show appropriate sections based on voting status
         if (userData.hasVoted) {
           document.getElementById("notVotedSection").style.display = "none";
           document.getElementById("alreadyVotedSection").style.display = "block";
           fetchResults();
         }
-        
+
         // Hide loading section and show voting section
         document.getElementById("loadingSection").style.display = "none";
         document.getElementById("votingSection").style.display = "block";
-        
+
         return userData;
       } catch (error) {
         debugLog("Authentication error", { message: error.message, stack: error.stack });
@@ -560,84 +809,146 @@
         }, 2000);
       }
     }
-    
+
     // Fetch candidates
     async function fetchCandidates() {
       debugLog("Fetching candidates");
       try {
-        const res = await fetch("/api/vote/candidates");
-        
+        const res = await fetch("/api/vote/candidates", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
         if (!res.ok) {
           const errorText = await res.text();
           debugLog("Failed to fetch candidates", { status: res.status, statusText: res.statusText, errorText });
           throw new Error("Failed to fetch candidates");
         }
-        
+
         const data = await res.json();
         debugLog("Candidates fetched successfully", { candidatesCount: data.candidates?.length });
-        
+
         const candidatesList = document.getElementById("candidatesList");
         candidatesList.innerHTML = "";
-        
+
         if (!data.candidates || data.candidates.length === 0) {
           candidatesList.innerHTML = "<p>No candidates available at this time.</p>";
           return;
         }
-        
+
+        // Group candidates by position
+        const candidatesByPosition = {};
         data.candidates.forEach(candidate => {
-          const div = document.createElement("div");
-          div.className = "candidate";
-          div.dataset.name = candidate;
-          div.textContent = candidate;
-          div.addEventListener("click", selectCandidate);
-          candidatesList.appendChild(div);
+          if (!candidatesByPosition[candidate.position]) {
+            candidatesByPosition[candidate.position] = [];
+          }
+          candidatesByPosition[candidate.position].push(candidate);
         });
+
+        // Display candidates by position
+        for (const [position, candidates] of Object.entries(candidatesByPosition)) {
+          const positionSection = document.createElement("div");
+          positionSection.className = "position-section";
+
+          const positionTitle = document.createElement("h3");
+          positionTitle.className = "position-title";
+          positionTitle.textContent = position;
+          positionSection.appendChild(positionTitle);
+
+          candidates.forEach(candidate => {
+            const card = document.createElement("div");
+            card.className = "candidate-card";
+            card.dataset.name = candidate.name;
+            card.dataset.position = candidate.position;
+
+            card.innerHTML = `
+          ${candidate.imageUrl ?
+                `<img src="${candidate.imageUrl}" alt="${candidate.name}" class="candidate-image">` :
+                `<div class="candidate-placeholder">${candidate.name.charAt(0)}</div>`
+              }
+          <div class="candidate-info">
+            <div class="candidate-name">${candidate.name}</div>
+            <div class="candidate-position">${candidate.position}</div>
+          </div>
+          <div class="candidate-check">
+            ✓
+          </div>
+        `;
+
+            card.addEventListener("click", () => selectCandidate(card, candidate));
+            positionSection.appendChild(card);
+          });
+
+          candidatesList.appendChild(positionSection);
+        }
       } catch (error) {
         debugLog("Error fetching candidates", { message: error.message, stack: error.stack });
         showMessage("Failed to load candidates", "error");
       }
     }
-    
+
     // Select a candidate
-    function selectCandidate(event) {
-      // Deselect previously selected candidate
-      const candidates = document.querySelectorAll(".candidate");
-      candidates.forEach(c => c.classList.remove("selected"));
+    function selectCandidate(card, candidate) {
+      // Add click feedback animation
+      card.classList.add("clicked");
+      setTimeout(() => card.classList.remove("clicked"), 200);
+
+      // Check if this candidate is already selected
+      const isCurrentlySelected = card.classList.contains("selected");
       
-      // Select this candidate
-      event.target.classList.add("selected");
-      selectedCandidate = event.target.dataset.name;
-      debugLog("Candidate selected", { candidate: selectedCandidate });
-      
-      // Enable vote button
-      document.getElementById("voteButton").disabled = false;
+      // Deselect all candidates for this position
+      const positionCards = document.querySelectorAll(`.candidate-card[data-position="${candidate.position}"]`);
+      positionCards.forEach(c => {
+        c.classList.remove("selected");
+      });
+
+      // If this candidate wasn't selected before, select them
+      if (!isCurrentlySelected) {
+        card.classList.add("selected");
+        selectedCandidate = candidate.name;
+        selectedPosition = candidate.position;
+        debugLog("Candidate selected", { candidate: selectedCandidate, position: candidate.position });
+        
+        // Enable vote button
+        document.getElementById("voteButton").disabled = false;
+      } else {
+        // If clicking on already selected candidate, deselect them
+        selectedCandidate = null;
+        selectedPosition = null;
+        debugLog("Candidate deselected");
+        
+        // Disable vote button
+        document.getElementById("voteButton").disabled = true;
+      }
     }
-    
+
     // Submit vote
     async function submitVote() {
       if (!selectedCandidate) {
         debugLog("Attempted to submit vote with no candidate selected");
         return;
       }
-      
+
       debugLog("Submitting vote", { candidateName: selectedCandidate });
-      
+
       try {
         // Disable the vote button during submission
         const voteButton = document.getElementById("voteButton");
         voteButton.disabled = true;
         voteButton.classList.add("loading");
-        
+
         // Check token validity before attempting submission
         if (!token) {
           debugLog("Token missing before vote submission");
           throw new Error("Authentication token missing. Please login again.");
         }
-        
+
         // Log the request details
-        const requestData = { candidateName: selectedCandidate };
+        const requestData = {
+          candidateName: selectedCandidate,
+          position: selectedPosition
+        };
         debugLog("Vote request data", requestData);
-        
+
         // Send the request
         const res = await fetch("/api/vote/submit", {
           method: "POST",
@@ -647,16 +958,16 @@
           },
           body: JSON.stringify(requestData)
         });
-        
+
         // Try to get the response body as text first
         const responseText = await res.text();
-        debugLog("Vote submission response", { 
-          status: res.status, 
+        debugLog("Vote submission response", {
+          status: res.status,
           statusText: res.statusText,
           headers: Object.fromEntries([...res.headers]),
-          body: responseText 
+          body: responseText
         });
-        
+
         // Parse the response if it's JSON
         let data;
         try {
@@ -665,11 +976,11 @@
           debugLog("Failed to parse response as JSON", { error: e.message });
           data = { message: responseText || "Unknown response from server" };
         }
-        
+
         if (!res.ok) {
           throw new Error(data.message || `Server error: ${res.status} ${res.statusText}`);
         }
-        
+
         showMessage(data.message || "Vote submitted successfully", "success");
         document.getElementById("notVotedSection").style.display = "none";
         document.getElementById("alreadyVotedSection").style.display = "block";
@@ -687,7 +998,7 @@
         }
       }
     }
-    
+
     // Fetch voting results
     async function fetchResults() {
       debugLog("Fetching voting results");
@@ -695,41 +1006,80 @@
         const res = await fetch("/api/vote/results", {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         if (!res.ok) {
           const errorText = await res.text();
           debugLog("Failed to fetch results", { status: res.status, statusText: res.statusText, errorText });
           throw new Error("Failed to fetch results");
         }
-        
+
         const data = await res.json();
         debugLog("Results fetched successfully", { resultsCount: data.results?.length });
-        
+
         const resultsList = document.getElementById("resultsList");
         resultsList.innerHTML = "";
-        
+
         if (!data.results || data.results.length === 0) {
           resultsList.innerHTML = "<p>No results available yet.</p>";
           return;
         }
-        
-        data.results.forEach(result => {
-          const div = document.createElement("div");
-          div.className = "result-item";
-          div.innerHTML = `
-            <span>${result.candidateName}</span>
-            <span>${result.count} vote${result.count !== 1 ? 's' : ''}</span>
-          `;
-          resultsList.appendChild(div);
+
+        // Display results by position
+        data.results.forEach(positionResult => {
+          const positionSection = document.createElement("div");
+          positionSection.className = "position-section";
+
+          const positionTitle = document.createElement("h3");
+          positionTitle.className = "position-title";
+          positionTitle.textContent = `${positionResult._id} (${positionResult.totalVotes} votes)`;
+          positionSection.appendChild(positionTitle);
+
+          // Sort candidates by vote count (descending)
+          positionResult.candidates.sort((a, b) => b.count - a.count);
+
+          positionResult.candidates.forEach(candidate => {
+            const percentage = positionResult.totalVotes > 0 ?
+              (candidate.count / positionResult.totalVotes * 100).toFixed(1) : 0;
+
+            const resultItem = document.createElement("div");
+            resultItem.className = "result-item";
+            resultItem.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+            ${candidate.imageUrl ?
+                `<img src="${candidate.imageUrl}" alt="${candidate.name}" 
+                style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` :
+                `<div style="width: 40px; height: 40px; border-radius: 50%; 
+                background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 14px;">${candidate.name.charAt(0)}</span>
+              </div>`
+              }
+            <span>${candidate.name}</span>
+            <span style="margin-left: auto; font-weight: 600;">
+              ${candidate.count} vote${candidate.count !== 1 ? 's' : ''} (${percentage}%)
+            </span>
+          </div>
+          <div class="result-bar-container">
+            <div class="result-bar" style="width: 0%"></div>
+          </div>
+        `;
+            positionSection.appendChild(resultItem);
+
+            // Animate the bar after a short delay
+            setTimeout(() => {
+              resultItem.querySelector(".result-bar").style.width = `${percentage}%`;
+            }, 100);
+          });
+
+          resultsList.appendChild(positionSection);
         });
-        
+
         document.getElementById("resultsSection").style.display = "block";
       } catch (error) {
         debugLog("Error fetching results", { message: error.message, stack: error.stack });
         showMessage("Failed to load results", "error");
       }
     }
-    
+
     // Show message
     function showMessage(message, type) {
       debugLog("Showing message", { message, type });
@@ -739,20 +1089,20 @@
       div.textContent = message;
       container.innerHTML = "";
       container.appendChild(div);
-      
+
       // Auto clear after 5 seconds
       setTimeout(() => {
         div.remove();
       }, 5000);
     }
-    
+
     // Logout function
     function logout() {
       debugLog("User logging out");
       localStorage.removeItem("token");
       window.location.href = "/login";
     }
-    
+
     // Check network connectivity
     function checkConnectivity() {
       const networkStatus = navigator.onLine ? "online" : "offline";
@@ -761,28 +1111,29 @@
         showMessage("You are currently offline. Please check your internet connection.", "error");
       }
     }
-    
+
     // Initialize
     (async function init() {
       debugLog("Initializing application");
       checkConnectivity();
-      
+
       const userData = await checkAuth();
       if (userData && !userData.hasVoted) {
         await fetchCandidates();
       }
     })();
-    
+
     // Add network status monitoring
     window.addEventListener('online', () => {
       debugLog("Network connection restored");
       showMessage("Your internet connection has been restored.", "success");
     });
-    
+
     window.addEventListener('offline', () => {
       debugLog("Network connection lost");
       showMessage("You are currently offline. Please check your internet connection.", "error");
     });
   </script>
 </body>
+
 </html>

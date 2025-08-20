@@ -645,11 +645,20 @@
         <ul id="studentsList"></ul>
       </section>
 
+      <!-- In the Add New Candidate section -->
       <section>
         <h2>Add New Candidate</h2>
         <div class="form-group">
           <label for="newCandidate">Candidate Name</label>
           <input type="text" id="newCandidate" placeholder="Enter candidate name" required>
+        </div>
+        <div class="form-group">
+          <label for="candidatePosition">Position</label>
+          <input type="text" id="candidatePosition" placeholder="Enter position (e.g., President)" required>
+        </div>
+        <div class="form-group">
+          <label for="candidateImage">Candidate Photo (Optional)</label>
+          <input type="file" id="candidateImage" accept="image/*">
         </div>
         <button onclick="addCandidate()" id="addCandidateBtn">
           <span class="btn-content">Add Candidate</span>
@@ -794,9 +803,10 @@
     }
 
 
+    // Update fetchCandidatesWithVotes to display position and image
     async function fetchCandidatesWithVotes() {
       try {
-        // Fetch candidates
+        // Fetch candidates with position and image
         const candidatesRes = await fetch("/api/admin/candidates", {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -807,56 +817,88 @@
 
         const candidatesData = await candidatesRes.json();
 
-        // Fetch vote counts (you'll need to implement this endpoint)
+        // Fetch vote counts by position
         const votesRes = await fetch("/api/admin/vote-counts", {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        let voteCounts = {};
-        let totalVotes = 0;
-
+        let voteCountsByPosition = {};
         if (votesRes.ok) {
           const votesData = await votesRes.json();
-          voteCounts = votesData.counts || {};
-          totalVotes = Object.values(voteCounts).reduce((sum, count) => sum + count, 0);
+          voteCountsByPosition = votesData.voteCounts || [];
         }
 
         const list = document.getElementById("candidatesList");
         list.innerHTML = "";
 
         currentStats.candidates = candidatesData.candidates ? candidatesData.candidates.length : 0;
-        currentStats.votes = totalVotes;
 
         if (!candidatesData.candidates || candidatesData.candidates.length === 0) {
           const li = document.createElement("li");
           li.textContent = "No candidates yet";
           list.appendChild(li);
         } else {
+          // Group candidates by position
+          const candidatesByPosition = {};
           candidatesData.candidates.forEach(candidate => {
-            const li = document.createElement("li");
-            const voteCount = voteCounts[candidate] || 0;
+            if (!candidatesByPosition[candidate.position]) {
+              candidatesByPosition[candidate.position] = [];
+            }
+            candidatesByPosition[candidate.position].push(candidate);
+          });
 
-            li.innerHTML = `
-              <div class="candidate-item">
-                <span class="candidate-name">${candidate}</span>
-                <div class="candidate-actions">
-                  <span class="vote-count ${voteCount === 0 ? 'zero' : ''}">${voteCount} vote${voteCount !== 1 ? 's' : ''}</span>
-                  <button class="delete-btn" onclick="deleteCandidate('${candidate}')" title="Delete ${candidate}">Delete</button>
+          // Display candidates by position
+          for (const [position, candidates] of Object.entries(candidatesByPosition)) {
+            const positionHeader = document.createElement("h3");
+            positionHeader.textContent = position;
+            positionHeader.style.marginTop = "20px";
+            positionHeader.style.marginBottom = "10px";
+            positionHeader.style.color = "var(--primary-color)";
+            list.appendChild(positionHeader);
+
+            candidates.forEach(candidate => {
+              const positionVotes = voteCountsByPosition.find(p => p._id === position);
+              const candidateVotes = positionVotes ?
+                positionVotes.candidates.find(c => c.name === candidate.name) : null;
+              const voteCount = candidateVotes ? candidateVotes.count : 0;
+
+              const li = document.createElement("li");
+              li.innerHTML = `
+            <div class="candidate-item">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                ${candidate.imageUrl ?
+                  `<img src="${candidate.imageUrl}" alt="${candidate.name}" 
+                    style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` :
+                  `<div style="width: 40px; height: 40px; border-radius: 50%; 
+                    background: #ccc; display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 16px;">${candidate.name.charAt(0)}</span>
+                  </div>`
+                }
+                <div>
+                  <div class="candidate-name">${candidate.name}</div>
+                  <small style="color: #666;">${candidate.position}</small>
                 </div>
               </div>
-            `;
-            list.appendChild(li);
-          });
+              <div class="candidate-actions">
+                <span class="vote-count ${voteCount === 0 ? 'zero' : ''}">
+                  ${voteCount} vote${voteCount !== 1 ? 's' : ''}
+                </span>
+                <button class="delete-btn" onclick="deleteCandidate('${candidate.name.replace(/'/g, "\\'")}', '${candidate.position.replace(/'/g, "\\'")}')" 
+  title="Delete ${candidate.name}">Delete</button>
+              </div>
+            </div>
+          `;
+              list.appendChild(li);
+            });
+          }
         }
 
         updateStats();
       } catch (error) {
         console.error("Error fetching candidates with votes:", error);
-        // Fallback to original method if vote-counts endpoint doesn't exist
         await fetchCandidates();
       }
     }
-
     async function fetchCandidates() {
       try {
         const res = await fetch("/api/admin/candidates", {
@@ -885,7 +927,8 @@
                 <span class="candidate-name">${candidate}</span>
                 <div class="candidate-actions">
                   <span class="vote-count zero">0 votes</span>
-                  <button class="delete-btn" onclick="deleteCandidate('${candidate}')" title="Delete ${candidate}">Delete</button>
+                  <button class="delete-btn" onclick="deleteCandidate('${candidate.name.replace(/'/g, "\\'")}', '${candidate.position.replace(/'/g, "\\'")}')" 
+  title="Delete ${candidate.name}">Delete</button>
                 </div>
               </div>
             `;
@@ -899,10 +942,14 @@
       }
     }
 
+    // Update addCandidate function in admin.html
     async function addCandidate() {
       const name = document.getElementById("newCandidate").value.trim();
-      if (!name) {
-        alert("Please enter a candidate name");
+      const position = document.getElementById("candidatePosition").value.trim();
+      const imageFile = document.getElementById("candidateImage").files[0];
+
+      if (!name || !position) {
+        alert("Please enter candidate name and position");
         return;
       }
 
@@ -911,26 +958,57 @@
         addCandidateBtn.classList.add("loading");
         addCandidateBtn.disabled = true;
 
+        // Create FormData object
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("position", position);
+
+        if (imageFile) {
+          formData.append("image", imageFile);
+        }
+
+        console.log("Sending FormData with:", {
+          name, position, hasImage: !!imageFile
+        });
+
         const res = await fetch("/api/admin/candidates", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`
+            // Don't set Content-Type header for FormData - browser will set it automatically
+            // with the correct boundary parameter
           },
-          body: JSON.stringify({ name })
+          body: formData
         });
 
-        if (!res.ok) {
-          throw new Error("Failed to add candidate");
+        // Try to get response as text first for debugging
+        const responseText = await res.text();
+        console.log("Response status:", res.status);
+        console.log("Response text:", responseText);
+
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (e) {
+          console.error("Failed to parse response as JSON:", e);
+          throw new Error(responseText || "Unknown response from server");
         }
 
-        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || `Request failed with status ${res.status}`);
+        }
+
         alert(data.message);
+
+        // Clear form
         document.getElementById("newCandidate").value = "";
+        document.getElementById("candidatePosition").value = "";
+        document.getElementById("candidateImage").value = "";
+
         fetchCandidatesWithVotes();
       } catch (error) {
         console.error("Error adding candidate:", error);
-        alert("Failed to add candidate");
+        alert("Failed to add candidate: " + error.message);
       } finally {
         const addCandidateBtn = document.getElementById("addCandidateBtn");
         addCandidateBtn.classList.remove("loading");
@@ -940,17 +1018,20 @@
 
     // NEW: Delete candidate function
     // Improved delete candidate function with better debugging
-    async function deleteCandidate(candidateName) {
-      const confirmed = confirm(`Are you sure you want to delete candidate "${candidateName}"? This action cannot be undone.`);
+    // Update deleteCandidate function in admin.html
+    async function deleteCandidate(candidateName, position) {
+      const confirmed = confirm(`Are you sure you want to delete candidate "${candidateName}" for position "${position}"?`);
       if (!confirmed) return;
 
       try {
-        // Log the original name and URL for debugging
-        console.log('🗑️ Original candidate name:', candidateName);
+        // Encode both name and position for URL
         const encodedName = encodeURIComponent(candidateName);
-        const url = `/api/admin/candidates/${encodedName}`;
-        console.log('🌐 Request URL:', url);
-        console.log('🔑 Token present:', !!token);
+        const encodedPosition = encodeURIComponent(position);
+        const url = `/api/admin/candidates/${encodedName}/${encodedPosition}`;
+
+        console.log('🗑️ Delete URL:', url);
+        console.log('🗑️ Candidate:', candidateName);
+        console.log('🗑️ Position:', position);
 
         const res = await fetch(url, {
           method: "DELETE",

@@ -5,8 +5,16 @@ const CandidateSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
     trim: true
+  },
+  position: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  imageUrl: {
+    type: String,
+    default: null
   },
   supabaseId: {
     type: String,
@@ -18,6 +26,9 @@ const CandidateSchema = new mongoose.Schema({
   }
 });
 
+// Add compound index to ensure unique name per position
+CandidateSchema.index({ name: 1, position: 1 }, { unique: true });
+
 // Sync with Supabase after saving
 CandidateSchema.post('save', async function(doc) {
   try {
@@ -27,6 +38,8 @@ CandidateSchema.post('save', async function(doc) {
         .from('candidates')
         .insert({
           name: doc.name,
+          position: doc.position,
+          image_url: doc.imageUrl,
           created_at: doc.createdAt
         })
         .select()
@@ -44,7 +57,9 @@ CandidateSchema.post('save', async function(doc) {
       const { error } = await supabaseAdmin
         .from('candidates')
         .update({
-          name: doc.name
+          name: doc.name,
+          position: doc.position,
+          image_url: doc.imageUrl
         })
         .eq('id', doc.supabaseId);
         

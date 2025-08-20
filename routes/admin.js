@@ -8,6 +8,37 @@ const jwt = require("jsonwebtoken");
 const Student = require("../models/Student");
 const XLSX = require('xlsx')
 const { syncAllToSupabase } = require("../utils/syncToSupabase");
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../public/uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'candidate-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  }
+});
 
 router.post("/students", verifyAdmin, async (req, res) => {
   try {
@@ -155,10 +186,7 @@ router.get("/voters", verifyAdmin, async (req, res) => {
 // Get vote counts for all candidates
 router.get("/vote-counts", verifyAdmin, async (req, res) => {
   try {
-    // Get all candidates
-    const candidates = await Candidate.find({});
-
-    // Get vote counts using aggregation
+    // Get vote counts by position and candidate
     const voteCounts = await Vote.aggregate([
       {
         $lookup: {
@@ -173,24 +201,28 @@ router.get("/vote-counts", verifyAdmin, async (req, res) => {
       },
       {
         $group: {
-          _id: '$candidateInfo.name',
+          _id: {
+            position: '$candidateInfo.position',
+            candidate: '$candidateInfo.name'
+          },
           count: { $sum: 1 }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id.position',
+          candidates: {
+            $push: {
+              name: '$_id.candidate',
+              count: '$count'
+            }
+          },
+          total: { $sum: '$count' }
         }
       }
     ]);
 
-    // Create counts object with all candidates (including those with 0 votes)
-    const counts = {};
-    candidates.forEach(candidate => {
-      counts[candidate.name] = 0;
-    });
-
-    // Update with actual vote counts
-    voteCounts.forEach(vote => {
-      counts[vote._id] = vote.count;
-    });
-
-    res.json({ counts });
+    res.json({ voteCounts });
   } catch (err) {
     res.status(500).json({
       message: "Error fetching vote counts",
@@ -200,31 +232,52 @@ router.get("/vote-counts", verifyAdmin, async (req, res) => {
 });
 
 // Add a new candidate
-router.post("/candidates", verifyAdmin, async (req, res) => {
+router.post("/candidates", verifyAdmin, upload.single('image'), async (req, res) => {
   try {
-    const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({ message: "Candidate name is required" });
+    console.log("Request body:", req.body);
+    console.log("Request file:", req.file);
+
+    const { name, position } = req.body;
+
+    if (!name || !position) {
+      return res.status(400).json({
+        message: "Candidate name and position are required",
+        received: { name, position }
+      });
     }
 
-    // Check if candidate already exists
-    const existingCandidate = await Candidate.findOne({ name });
+    // Check if candidate already exists for this position
+    const existingCandidate = await Candidate.findOne({ name, position });
     if (existingCandidate) {
-      return res.status(400).json({ message: "Candidate already exists" });
+      return res.status(400).json({
+        message: "Candidate already exists for this position",
+        existingCandidate: {
+          name: existingCandidate.name,
+          position: existingCandidate.position
+        }
+      });
+    }
+
+    // Handle image upload
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = `/uploads/${req.file.filename}`;
     }
 
     // Create and save the new candidate
-    const candidate = new Candidate({ name });
+    const candidate = new Candidate({ name, position, imageUrl });
     await candidate.save();
 
-    const candidates = await Candidate.find({}).select("name");
-    const candidateNames = candidates.map(c => c.name);
-
     res.json({
-      message: `${name} added as a candidate`,
-      candidates: candidateNames
+      message: `${name} added as a candidate for ${position}`,
+      candidate: {
+        name: candidate.name,
+        position: candidate.position,
+        imageUrl: candidate.imageUrl
+      }
     });
   } catch (err) {
+    console.error("Error adding candidate:", err);
     res.status(500).json({
       message: "Error adding candidate",
       error: err.message
@@ -234,77 +287,83 @@ router.post("/candidates", verifyAdmin, async (req, res) => {
 
 // Delete a candidate
 // Enhanced delete candidate route with better debugging
-router.delete("/candidates/:name", verifyAdmin, async (req, res) => {
-  console.log(`🗑️ Delete candidate request received for: ${req.params.name}`);
+// Update the delete candidate route to handle both name and position
+router.delete("/candidates/:name/:position", verifyAdmin, async (req, res) => {
+  console.log(`🗑️ Delete candidate request received for: ${req.params.name}, ${req.params.position}`);
   console.log(`🗑️ Raw params:`, req.params);
-  console.log(`🗑️ User making request:`, req.user?.email);
-  
+
   try {
-    // Decode and trim the name
+    // Decode and trim the name and position
     const name = decodeURIComponent(req.params.name).trim();
-    console.log(`🔍 Processed candidate name: "${name}"`);
-    
+    const position = decodeURIComponent(req.params.position).trim();
+    console.log(`🔍 Processed candidate: name="${name}", position="${position}"`);
+
     // First, let's see what candidates exist
-    const allCandidates = await Candidate.find({}).select('name');
-    console.log(`📋 All candidates in DB:`, allCandidates.map(c => `"${c.name}"`));
-    
+    const allCandidates = await Candidate.find({}).select('name position');
+    console.log(`📋 All candidates in DB:`, allCandidates.map(c => `"${c.name}" (${c.position})`));
+
     // Check if candidate exists (case-insensitive)
     const candidate = await Candidate.findOne({
-      name: { $regex: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+      name: { $regex: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+      position: { $regex: new RegExp(`^${position.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
     });
-    
+
     if (!candidate) {
-      console.log(`❌ Candidate not found: "${name}"`);
-      console.log(`💡 Available candidates: ${allCandidates.map(c => c.name).join(', ')}`);
+      console.log(`❌ Candidate not found: "${name}" for position "${position}"`);
+      console.log(`💡 Available candidates: ${allCandidates.map(c => `${c.name} (${c.position})`).join(', ')}`);
       return res.status(404).json({
-        message: "Candidate not found",
-        searchedFor: name,
-        availableCandidates: allCandidates.map(c => c.name)
+        message: "Candidate not found for this position",
+        searchedFor: { name, position },
+        availableCandidates: allCandidates.map(c => ({ name: c.name, position: c.position }))
       });
     }
-    
-    console.log(`✅ Candidate found: "${candidate.name}" (ID: ${candidate._id}, Supabase ID: ${candidate.supabaseId})`);
-    
+
+    console.log(`✅ Candidate found: "${candidate.name}" (${candidate.position}) - ID: ${candidate._id}, Supabase ID: ${candidate.supabaseId}`);
+
     // Check if candidate has received votes
     const voteCount = await Vote.countDocuments({ candidate: candidate._id });
     console.log(`📊 Vote count for ${candidate.name}: ${voteCount}`);
-    
+
     if (voteCount > 0) {
       console.log(`⚠️ Cannot delete candidate ${candidate.name} - has ${voteCount} votes`);
       return res.status(400).json({
         message: `Cannot delete candidate ${candidate.name}. They have received ${voteCount} vote(s). Reset votes first if you want to delete this candidate.`
       });
     }
-    
+
     // Store candidate info before deletion for response
     const candidateInfo = {
       name: candidate.name,
+      position: candidate.position,
       id: candidate._id,
       supabaseId: candidate.supabaseId
     };
-    
+
     // Delete the candidate using the found candidate's ID
-    // The post-hook will automatically handle Supabase deletion
-    const deleteResult = await Candidate.findOneAndDelete({ _id: candidate._id });
+    const deleteResult = await Candidate.findOneAndDelete({
+      name: candidate.name,
+      position: candidate.position
+    });
     console.log(`✅ Delete result:`, deleteResult ? 'Success' : 'Failed');
-    
+
     if (!deleteResult) {
       throw new Error('Delete operation failed - candidate not removed');
     }
-    
-    console.log(`✅ Successfully deleted candidate: "${candidateInfo.name}" from both MongoDB and Supabase`);
-    
+
+    console.log(`✅ Successfully deleted candidate: "${candidateInfo.name}" (${candidateInfo.position}) from both MongoDB and Supabase`);
+
     res.json({
-      message: `Candidate ${candidateInfo.name} deleted successfully from both MongoDB and Supabase`,
+      message: `Candidate ${candidateInfo.name} for position ${candidateInfo.position} deleted successfully`,
       deletedCandidate: candidateInfo
     });
-    
+
   } catch (err) {
     console.error(`❌ Error deleting candidate:`, err);
     res.status(500).json({
       message: "Error deleting candidate",
       error: err.message,
-      candidateName: req.params.name
+      candidateName: req.params.name,
+      candidatePosition: req.params.position
     });
   }
 });
@@ -312,9 +371,8 @@ router.delete("/candidates/:name", verifyAdmin, async (req, res) => {
 // Get all candidates
 router.get("/candidates", verifyAdmin, async (req, res) => {
   try {
-    const candidates = await Candidate.find({}).select("name");
-    const candidateNames = candidates.map(c => c.name);
-    res.json({ candidates: candidateNames });
+    const candidates = await Candidate.find({}).select("name position imageUrl");
+    res.json({ candidates });
   } catch (err) {
     res.status(500).json({
       message: "Error fetching candidates",

@@ -25,6 +25,9 @@ app.use(express.static(path.join(__dirname, "public")));
 // Serve admin.html from views directory
 app.use('/views', express.static(path.join(__dirname, "views")));
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/vote", voteRoutes);
@@ -39,6 +42,16 @@ app.post("/api/sync-to-supabase", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Error syncing to Supabase", error: error.message });
   }
+});
+
+// Add this to your server.js file before your routes
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  if (req.method === 'POST' || req.method === 'PUT') {
+    console.log('Body:', req.body);
+  }
+  next();
 });
 
 // MongoDB connection with retry logic for serverless environments
