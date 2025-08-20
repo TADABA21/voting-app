@@ -28,9 +28,10 @@ app.use('/views', express.static(path.join(__dirname, "views")));
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/vote", voteRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/results', resultsRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/results", resultsRoutes);
 
+// Sync endpoint
 // Sync endpoint
 app.post("/api/sync-to-supabase", async (req, res) => {
   try {
