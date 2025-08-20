@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Results - Voting App</title>
+  <style>
+    :root {
+      --primary-color: #4CAF50;
+      --primary-hover: #45a049;
+      --background: #f9f9f9;
+      --card-bg: #ffffff;
+      --text: #333333;
+      --error: #f44336;
+      --success: #4CAF50;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --border-radius: 8px;
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 30px;
+      transform: translateY(0);
+      transition: transform 0.5s ease, box-shadow 0.5s ease;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary-color), #2196F3, #9C27B0);
+      background-size: 200% 100%;
+      animation: gradientBorder 3s linear infinite;
+    }
+
+    @keyframes gradientBorder {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .header h1 {
+      font-weight: 600;
+      color: var(--text);
+      position: relative;
+      padding-bottom: 10px;
+    }
+
+    .header h1::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50px;
+      height: 3px;
+      background-color: var(--primary-color);
+      transition: width 0.3s ease;
+    }
+
+    .container:hover .header h1::after {
+      width: 100px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      background-color: rgba(255, 255, 255, 0.3);
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: -100%;
+      transform: skewX(-15deg);
+      transition: all 0.5s ease;
+    }
+
+    .btn:hover::after {
+      left: 100%;
+    }
+
+    .results {
+      margin-top: 20px;
+    }
+
+    .results h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .result-item {
+      background-color: #f5f5f5;
+      border-radius: var(--border-radius);
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: var(--transition);
+    }
+
+    .result-item:hover {
+      transform: translateX(5px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .result-bar-container {
+      width: 100%;
+      background-color: #e0e0e0;
+      height: 16px;
+      margin-top: 8px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .result-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-color), #2196F3);
+      border-radius: 8px;
+      transition: width 1s ease-out;
+    }
+
+    .candidate-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .candidate-name {
+      font-weight: 600;
+    }
+
+    .candidate-stats {
+      color: #666;
+    }
+
+    #totalVotes {
+      text-align: right;
+      margin-top: 20px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .message {
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f0f0f0;
+      width: 100%;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .message.error {
+      background-color: rgba(244, 67, 54, 0.2);
+      color: var(--error);
+      border-left: 4px solid var(--error);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Loading animation */
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100px;
+    }
+
+    .loading {
+      display: inline-block;
+      position: relative;
+      width: 64px;
+      height: 64px;
+    }
+
+    .loading div {
+      position: absolute;
+      background: var(--primary-color);
+      opacity: 1;
+      border-radius: 50%;
+      animation: loading 1.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+    }
+
+    .loading div:nth-child(2) {
+      animation-delay: -0.7s;
+    }
+
+    @keyframes loading {
+      0% {
+        top: 28px;
+        left: 28px;
+        width: 0;
+        height: 0;
+        opacity: 1;
+      }
+      100% {
+        top: -1px;
+        left: -1px;
+        width: 58px;
+        height: 58px;
+        opacity: 0;
+      }
+    }
+
+    /* Refresh button */
+    .refresh-btn {
+      background-color: transparent;
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+      padding: 8px 15px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      margin-top: 20px;
+      transition: var(--transition);
+    }
+
+    .refresh-btn:hover {
+      background-color: rgba(76, 175, 80, 0.1);
+    }
+
+    .refresh-btn svg {
+      margin-right: 5px;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+      
+      .container {
+        padding: 20px;
+      }
+      
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .header .btn {
+        margin-top: 15px;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #121212;
+        --card-bg: #1e1e1e;
+        --text: #f0f0f0;
+        --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      }
+      
+      .result-item {
+        background-color: #292929;
+      }
+      
+      .result-bar-container {
+        background-color: #333333;
+      }
+      
+      .message {
+        background-color: #292929;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Election Results</h1>
+      <a href="/login" class="btn">Login</a>
+    </div>
+    
+    <div id="loadingMessage" class="loading-container">
+      <div class="loading">
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+    
+    <div id="resultsSection" class="results" style="display: none;">
+      <h2>Current Standings</h2>
+      <div id="resultsList"></div>
+      <p id="totalVotes"></p>
+      
+      <button class="refresh-btn" onclick="fetchResults()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"></path>
+          <path d="M1 20v-6h6"></path>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+          <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+        </svg>
+        Refresh Results
+      </button>
+    </div>
+    
+    <div id="messageContainer"></div>
+  </div>
+  
+  <script>
+    // Fetch voting results
+    async function fetchResults() {
+      try {
+        document.getElementById("loadingMessage").style.display = "flex";
+        document.getElementById("resultsSection").style.display = "none";
+        
+        const res = await fetch("/api/results");
+        
+        if (!res.ok) {
+          throw new Error("Failed to fetch results");
+        }
+        
+        const data = await res.json();
+        const resultsList = document.getElementById("resultsList");
+        resultsList.innerHTML = "";
+        
+        if (!data.results || data.results.length === 0) {
+          resultsList.innerHTML = `
+            <div class="result-item" style="text-align: center;">
+              <p>No results available yet.</p>
+            </div>
+          `;
+          document.getElementById("loadingMessage").style.display = "none";
+          document.getElementById("resultsSection").style.display = "block";
+          return;
+        }
+        
+        // Calculate total votes for percentage
+        let totalVotes = 0;
+        data.results.forEach(result => {
+          totalVotes += result.count;
+        });
+        
+        document.getElementById("totalVotes").textContent = `Total votes: ${totalVotes}`;
+        
+        // Sort results by vote count (descending)
+        data.results.sort((a, b) => b.count - a.count);
+        
+        // Create result bars with animation
+        data.results.forEach((result, index) => {
+          const percentage = totalVotes > 0 ? (result.count / totalVotes * 100).toFixed(1) : 0;
+          
+          const div = document.createElement("div");
+          div.className = "result-item";
+          
+          // Add a leading position for the top 3
+          let positionLabel = '';
+          if (index === 0 && result.count > 0) {
+            positionLabel = '<span style="color: gold; margin-right: 5px;">🏆</span>';
+          } else if (index === 1 && result.count > 0) {
+            positionLabel = '<span style="color: silver; margin-right: 5px;">🥈</span>';
+          } else if (index === 2 && result.count > 0) {
+            positionLabel = '<span style="color: #cd7f32; margin-right: 5px;">🥉</span>';
+          }
+          
+          div.innerHTML = `
+            <div class="candidate-info">
+              <span class="candidate-name">${positionLabel}${result.candidateName}</span>
+              <span class="candidate-stats">${result.count} vote${result.count !== 1 ? 's' : ''} (${percentage}%)</span>
+            </div>
+            <div class="result-bar-container">
+              <div class="result-bar" style="width: 0%"></div>
+            </div>
+          `;
+          resultsList.appendChild(div);
+          
+          // Animate the bar after a short delay
+          setTimeout(() => {
+            div.querySelector(".result-bar").style.width = `${percentage}%`;
+          }, 100 * index);
+        });
+        
+        document.getElementById("loadingMessage").style.display = "none";
+        document.getElementById("resultsSection").style.display = "block";
+      } catch (error) {
+        console.error("Error fetching results:", error);
+        showMessage("Failed to load results", "error");
+      }
+    }
+    
+    // Show message
+    function showMessage(message, type) {
+      const container = document.getElementById("messageContainer");
+      const div = document.createElement("div");
+      div.className = `message ${type}`;
+      div.textContent = message;
+      container.innerHTML = "";
+      container.appendChild(div);
+      
+      // Auto hide after 5 seconds
+      setTimeout(() => {
+        div.style.opacity = "0";
+        div.style.transform = "translateY(-10px)";
+        div.style.transition = "opacity 0.3s, transform 0.3s";
+        
+        setTimeout(() => {
+          container.innerHTML = "";
+        }, 300);
+      }, 5000);
+    }
+    
+    // Initialize
+    fetchResults();
+    
+    // Refresh results every 30 seconds
+    const refreshInterval = setInterval(fetchResults, 30000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Voting App</title>
+  <style>
+    :root {
+      --primary-color: #4CAF50;
+      --primary-hover: #45a049;
+      --background: #f9f9f9;
+      --card-bg: #ffffff;
+      --text: #333333;
+      --error: #f44336;
+      --success: #4CAF50;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --border-radius: 8px;
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 30px;
+      transform: translateY(0);
+      transition: transform 0.5s ease, box-shadow 0.5s ease;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary-color), #2196F3, #9C27B0);
+      background-size: 200% 100%;
+      animation: gradientBorder 3s linear infinite;
+    }
+
+    @keyframes gradientBorder {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: var(--text);
+      font-weight: 600;
+      position: relative;
+      padding-bottom: 10px;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 3px;
+      background-color: var(--primary-color);
+      transition: width 0.3s ease;
+    }
+
+    .container:hover h1::after {
+      width: 100px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+      color: var(--text);
+      font-weight: 500;
+      border-left: 4px solid var(--primary-color);
+      padding-left: 10px;
+      transition: var(--transition);
+    }
+
+    section:hover h2 {
+      transform: translateX(5px);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: var(--border-radius);
+      background-color: #f5f5f5;
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+      background-color: #fff;
+    }
+
+    .form-group input::placeholder {
+      color: #aaa;
+      opacity: 1;
+      transition: var(--transition);
+    }
+
+    .form-group input:focus::placeholder {
+      opacity: 0.5;
+      transform: translateX(10px);
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px 15px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button::after {
+      content: '';
+      position: absolute;
+      background-color: rgba(255, 255, 255, 0.3);
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: -100%;
+      transform: skewX(-15deg);
+      transition: all 0.5s ease;
+    }
+
+    button:hover::after {
+      left: 100%;
+    }
+
+    .alert {
+      padding: 10px 15px;
+      margin: 20px 0;
+      border-radius: var(--border-radius);
+      font-size: 14px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .success {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: var(--success);
+      border-left: 4px solid var(--success);
+    }
+
+    .error {
+      background-color: rgba(244, 67, 54, 0.2);
+      color: var(--error);
+      border-left: 4px solid var(--error);
+    }
+
+    .links {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 15px;
+    }
+
+    .links a {
+      color: var(--primary-color);
+      text-decoration: none;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--primary-color);
+      transition: var(--transition);
+    }
+
+    .links a:hover {
+      color: var(--primary-hover);
+    }
+
+    .links a:hover::after {
+      width: 100%;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      padding: 15px;
+      background: var(--card-bg);
+      margin-bottom: 10px;
+      border-radius: var(--border-radius);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      border-left: 3px solid transparent;
+    }
+
+    li:hover {
+      transform: translateX(5px);
+      border-left-color: var(--primary-color);
+    }
+
+    .candidate-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .candidate-name {
+      font-weight: 500;
+      flex-grow: 1;
+    }
+
+    .candidate-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .vote-count {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .vote-count.zero {
+      background-color: #ccc;
+      color: #666;
+    }
+
+    .delete-btn {
+      background-color: var(--error) !important;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      width: auto !important;
+      transition: var(--transition);
+    }
+
+    .delete-btn:hover {
+      background-color: #d32f2f !important;
+      transform: translateY(-1px);
+    }
+
+    section {
+      margin-bottom: 2rem;
+      padding: 20px;
+      border-radius: var(--border-radius);
+      background-color: var(--card-bg);
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    section:hover {
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .welcome-message {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 10px;
+      background-color: rgba(76, 175, 80, 0.1);
+      border-radius: var(--border-radius);
+      font-weight: 500;
+    }
+
+    .logout-btn {
+      background-color: var(--error);
+      padding: 10px 15px;
+      width: auto;
+    }
+
+    .logout-btn:hover {
+      background-color: #d32f2f;
+    }
+
+    .danger-zone {
+      background-color: rgba(244, 67, 54, 0.05);
+      border: 1px dashed var(--error);
+    }
+
+    .danger-zone h2 {
+      border-left-color: var(--error);
+      color: var(--error);
+    }
+
+    .danger-zone button {
+      background-color: var(--error);
+    }
+
+    .danger-zone button:hover {
+      background-color: #d32f2f;
+    }
+
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      position: absolute;
+      top: 50%;
+      right: 15px;
+      transform: translateY(-50%);
+    }
+
+    @keyframes spin {
+      to {
+        transform: translateY(-50%) rotate(360deg);
+      }
+    }
+
+    .btn-content {
+      transition: var(--transition);
+    }
+
+    button.loading .spinner {
+      display: block;
+    }
+
+    button.loading .btn-content {
+      padding-right: 25px;
+    }
+
+    .stats-summary {
+      background: linear-gradient(135deg, var(--primary-color), #2196F3);
+      color: white;
+      padding: 20px;
+      border-radius: var(--border-radius);
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .stat-item {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 15px;
+      border-radius: var(--border-radius);
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2em;
+      font-weight: bold;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.9em;
+      opacity: 0.9;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      section {
+        padding: 15px;
+      }
+
+      .header {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .logout-btn {
+        width: 100%;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .candidate-actions {
+        flex-direction: column;
+        gap: 5px;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #121212;
+        --card-bg: #1e1e1e;
+        --text: #f0f0f0;
+        --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      .form-group input {
+        background-color: #2a2a2a;
+        border-color: #333;
+        color: #f0f0f0;
+      }
+
+      .form-group input:focus {
+        background-color: #333;
+      }
+
+      section {
+        background-color: #2a2a2a;
+      }
+
+      li {
+        background: #2a2a2a;
+      }
+
+      .welcome-message {
+        background-color: rgba(76, 175, 80, 0.05);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="unauthorized-message" style="display: none;">
+    <div class="container">
+      <h1>Access Denied</h1>
+      <div class="alert error">Administrator privileges required</div>
+      <div class="links">
+        <a href="/login">Return to Login</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="admin-panel" style="display: none;">
+    <div class="container">
+      <div class="header">
+        <h1>Admin Dashboard</h1>
+        <button class="logout-btn" onclick="logout()">
+          <span class="btn-content">Logout</span>
+          <span class="spinner"></span>
+        </button>
+      </div>
+
+      <div class="welcome-message">
+        Welcome, <span id="adminEmailDisplay"></span>! You have administrator access.
+      </div>
+
+      <div class="stats-summary">
+        <h3>Voting Statistics</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-number" id="totalCandidates">0</span>
+            <span class="stat-label">Candidates</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="totalVotes">0</span>
+            <span class="stat-label">Total Votes</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="totalVoters">0</span>
+            <span class="stat-label">Voters</span>
+          </div>
+        </div>
+      </div>
+      <section>
+        <h2>Student Database Management</h2>
+
+        <!-- Add Single Student -->
+        <div class="form-group">
+          <label for="studentEmail">Student Email</label>
+          <input type="email" id="studentEmail" placeholder="Enter student email" required>
+        </div>
+        <div class="form-group">
+          <label for="studentId">Student ID (Optional)</label>
+          <input type="text" id="studentId" placeholder="Enter student ID">
+        </div>
+        <div class="form-group">
+          <label for="studentName">Student Name (Optional)</label>
+          <input type="text" id="studentName" placeholder="Enter student name">
+        </div>
+        <div class="form-group">
+          <label for="studentDepartment">Department (Optional)</label>
+          <input type="text" id="studentDepartment" placeholder="Enter department">
+        </div>
+        <button onclick="addStudent()" id="addStudentBtn" style="margin-bottom: 20px;">
+          <span class="btn-content">Add Student Email</span>
+          <span class="spinner"></span>
+        </button>
+
+        <!-- Bulk Upload Section -->
+        <div class="form-group">
+          <label for="bulkStudents">Bulk Upload (JSON format)</label>
+          <textarea id="bulkStudents" rows="4"
+            style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: monospace;"
+            placeholder='[{"email":"student1@email.com","studentId":"S001","name":"John Doe","department":"CS"},{"email":"student2@email.com","studentId":"S002","name":"Jane Smith","department":"EE"}]'></textarea>
+        </div>
+        <button onclick="bulkUploadStudents()" id="bulkUploadBtn" style="margin-bottom: 20px;">
+          <span class="btn-content">Bulk Upload Students</span>
+          <span class="spinner"></span>
+        </button>
+
+
+        <!-- In the Student Database Management section -->
+        <div class="form-group">
+          <label for="excelUpload">Bulk Upload (Excel file)</label>
+          <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv" style="display: none;">
+          <div style="display: flex; gap: 10px;">
+            <button onclick="document.getElementById('excelUpload').click()" style="width: auto;">
+              <span class="btn-content">Choose Excel File</span>
+            </button>
+            <span id="excelFileName" style="align-self: center; color: #666;">No file chosen</span>
+          </div>
+          <small style="display: block; margin-top: 5px; color: #666;">
+            Supported formats: .xlsx, .xls, .csv. File should have columns: email, studentId (optional), name
+            (optional), department (optional)
+          </small>
+
+          <!-- Add a fallback upload option -->
+          <div id="excelFallback" style="display: none; margin-top: 10px;">
+            <p style="color: var(--error);">Couldn't load Excel parser. You can upload the file directly:</p>
+            <button onclick="uploadExcelDirect()" id="excelDirectUploadBtn">
+              <span class="btn-content">Upload File Directly</span>
+              <span class="spinner"></span>
+            </button>
+          </div>
+        </div>
+        <button onclick="uploadExcel()" id="excelUploadBtn" style="margin-bottom: 20px;">
+          <span class="btn-content">Process Excel File</span>
+          <span class="spinner"></span>
+        </button>
+        <!-- Students List -->
+        <h3 style="margin-top: 20px; margin-bottom: 10px;">Registered Student Emails</h3>
+        <ul id="studentsList"></ul>
+      </section>
+
+      <section>
+        <h2>Add New Candidate</h2>
+        <div class="form-group">
+          <label for="newCandidate">Candidate Name</label>
+          <input type="text" id="newCandidate" placeholder="Enter candidate name" required>
+        </div>
+        <button onclick="addCandidate()" id="addCandidateBtn">
+          <span class="btn-content">Add Candidate</span>
+          <span class="spinner"></span>
+        </button>
+      </section>
+
+      <section>
+        <h2>Candidates & Vote Counts</h2>
+        <ul id="candidatesList"></ul>
+      </section>
+
+      <section>
+        <h2>Voter Records</h2>
+        <ul id="votersList"></ul>
+      </section>
+
+      <section>
+        <h2>User Management</h2>
+        <div class="form-group">
+          <label for="makeAdminEmail">Grant Admin Access</label>
+          <input type="email" id="makeAdminEmail" placeholder="Enter user email" required>
+        </div>
+        <button onclick="makeAdmin()" id="makeAdminBtn" style="margin-bottom: 15px;">
+          <span class="btn-content">Make Admin</span>
+          <span class="spinner"></span>
+        </button>
+
+        <div class="form-group">
+          <label for="removeAdminEmail">Remove Admin Access</label>
+          <input type="email" id="removeAdminEmail" placeholder="Enter admin email" required>
+        </div>
+        <button onclick="removeAdmin()" id="removeAdminBtn" style="background-color: #ff9800; margin-bottom: 20px;">
+          <span class="btn-content">Remove Admin</span>
+          <span class="spinner"></span>
+        </button>
+
+        <h3 style="margin-top: 20px; margin-bottom: 10px;">All Users</h3>
+        <ul id="usersList"></ul>
+      </section>
+
+      <section class="danger-zone">
+        <h2>Vote Management</h2>
+        <button onclick="resetVotes()" id="resetVotesBtn">
+          <span class="btn-content">Reset All Votes</span>
+          <span class="spinner"></span>
+        </button>
+        <h2>Data Sync</h2>
+        <button onclick="syncToSupabase()" id="syncBtn">
+          <span class="btn-content">Sync Data to Supabase</span>
+          <span class="spinner"></span>
+        </button>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // Keep original JavaScript functionality with vote count modifications
+    const token = localStorage.getItem("token");
+    let currentStats = { candidates: 0, votes: 0, voters: 0 };
+    // Add this to the script section
+    document.getElementById('excelUpload').addEventListener('change', function (e) {
+      const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+      document.getElementById('excelFileName').textContent = fileName;
+    });
+
+
+
+    async function checkAdminAccess() {
+      try {
+        if (!token) {
+          showUnauthorizedMessage("No authentication token found");
+          return false;
+        }
+
+        const res = await fetch("/api/admin/check", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          showUnauthorizedMessage("Admin access required");
+          return false;
+        }
+
+        const data = await res.json();
+        document.getElementById("adminEmailDisplay").textContent = data.email;
+        document.getElementById("admin-panel").style.display = "block";
+        return true;
+      } catch (error) {
+        showUnauthorizedMessage("An error occurred while verifying admin access");
+        console.error("Admin access error:", error);
+        return false;
+      }
+    }
+
+    function showUnauthorizedMessage(reason) {
+      document.getElementById("unauthorized-message").style.display = "block";
+      console.error("Access denied:", reason);
+    }
+
+    function updateStats() {
+      document.getElementById("totalCandidates").textContent = currentStats.candidates;
+      document.getElementById("totalVotes").textContent = currentStats.votes;
+      document.getElementById("totalVoters").textContent = currentStats.voters;
+    }
+
+    async function fetchVoters() {
+      try {
+        const res = await fetch("/api/admin/voters", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch voters");
+        }
+
+        const data = await res.json();
+        const list = document.getElementById("votersList");
+        list.innerHTML = "";
+
+        currentStats.voters = data.voters.length;
+
+        if (data.voters.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "No voters yet";
+          list.appendChild(li);
+        } else {
+          data.voters.forEach(v => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+              <span>${v.email}</span>
+              <span style="color: var(--success); font-weight: 500;">✓ Voted</span>
+            `;
+            list.appendChild(li);
+          });
+        }
+
+        updateStats();
+      } catch (error) {
+        console.error("Error fetching voters:", error);
+      }
+    }
+
+
+    async function fetchCandidatesWithVotes() {
+      try {
+        // Fetch candidates
+        const candidatesRes = await fetch("/api/admin/candidates", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!candidatesRes.ok) {
+          throw new Error("Failed to fetch candidates");
+        }
+
+        const candidatesData = await candidatesRes.json();
+
+        // Fetch vote counts (you'll need to implement this endpoint)
+        const votesRes = await fetch("/api/admin/vote-counts", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        let voteCounts = {};
+        let totalVotes = 0;
+
+        if (votesRes.ok) {
+          const votesData = await votesRes.json();
+          voteCounts = votesData.counts || {};
+          totalVotes = Object.values(voteCounts).reduce((sum, count) => sum + count, 0);
+        }
+
+        const list = document.getElementById("candidatesList");
+        list.innerHTML = "";
+
+        currentStats.candidates = candidatesData.candidates ? candidatesData.candidates.length : 0;
+        currentStats.votes = totalVotes;
+
+        if (!candidatesData.candidates || candidatesData.candidates.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "No candidates yet";
+          list.appendChild(li);
+        } else {
+          candidatesData.candidates.forEach(candidate => {
+            const li = document.createElement("li");
+            const voteCount = voteCounts[candidate] || 0;
+
+            li.innerHTML = `
+              <div class="candidate-item">
+                <span class="candidate-name">${candidate}</span>
+                <div class="candidate-actions">
+                  <span class="vote-count ${voteCount === 0 ? 'zero' : ''}">${voteCount} vote${voteCount !== 1 ? 's' : ''}</span>
+                  <button class="delete-btn" onclick="deleteCandidate('${candidate}')" title="Delete ${candidate}">Delete</button>
+                </div>
+              </div>
+            `;
+            list.appendChild(li);
+          });
+        }
+
+        updateStats();
+      } catch (error) {
+        console.error("Error fetching candidates with votes:", error);
+        // Fallback to original method if vote-counts endpoint doesn't exist
+        await fetchCandidates();
+      }
+    }
+
+    async function fetchCandidates() {
+      try {
+        const res = await fetch("/api/admin/candidates", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch candidates");
+        }
+
+        const data = await res.json();
+        const list = document.getElementById("candidatesList");
+        list.innerHTML = "";
+
+        currentStats.candidates = data.candidates ? data.candidates.length : 0;
+
+        if (!data.candidates || data.candidates.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "No candidates yet";
+          list.appendChild(li);
+        } else {
+          data.candidates.forEach(candidate => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+              <div class="candidate-item">
+                <span class="candidate-name">${candidate}</span>
+                <div class="candidate-actions">
+                  <span class="vote-count zero">0 votes</span>
+                  <button class="delete-btn" onclick="deleteCandidate('${candidate}')" title="Delete ${candidate}">Delete</button>
+                </div>
+              </div>
+            `;
+            list.appendChild(li);
+          });
+        }
+
+        updateStats();
+      } catch (error) {
+        console.error("Error fetching candidates:", error);
+      }
+    }
+
+    async function addCandidate() {
+      const name = document.getElementById("newCandidate").value.trim();
+      if (!name) {
+        alert("Please enter a candidate name");
+        return;
+      }
+
+      try {
+        const addCandidateBtn = document.getElementById("addCandidateBtn");
+        addCandidateBtn.classList.add("loading");
+        addCandidateBtn.disabled = true;
+
+        const res = await fetch("/api/admin/candidates", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ name })
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to add candidate");
+        }
+
+        const data = await res.json();
+        alert(data.message);
+        document.getElementById("newCandidate").value = "";
+        fetchCandidatesWithVotes();
+      } catch (error) {
+        console.error("Error adding candidate:", error);
+        alert("Failed to add candidate");
+      } finally {
+        const addCandidateBtn = document.getElementById("addCandidateBtn");
+        addCandidateBtn.classList.remove("loading");
+        addCandidateBtn.disabled = false;
+      }
+    }
+
+    // NEW: Delete candidate function
+    // Improved delete candidate function with better debugging
+    async function deleteCandidate(candidateName) {
+      const confirmed = confirm(`Are you sure you want to delete candidate "${candidateName}"? This action cannot be undone.`);
+      if (!confirmed) return;
+
+      try {
+        // Log the original name and URL for debugging
+        console.log('🗑️ Original candidate name:', candidateName);
+        const encodedName = encodeURIComponent(candidateName);
+        const url = `/api/admin/candidates/${encodedName}`;
+        console.log('🌐 Request URL:', url);
+        console.log('🔑 Token present:', !!token);
+
+        const res = await fetch(url, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('📡 Response status:', res.status);
+        console.log('📡 Response ok:', res.ok);
+
+        // Always try to get response body for debugging
+        const contentType = res.headers.get('content-type');
+        console.log('📡 Content-Type:', contentType);
+
+        let data;
+        if (contentType && contentType.includes('application/json')) {
+          data = await res.json();
+          console.log('📋 Response data:', data);
+        } else {
+          const textResponse = await res.text();
+          console.log('📄 Non-JSON response:', textResponse.substring(0, 500));
+
+          // Handle specific HTTP status codes
+          if (res.status === 404) {
+            if (textResponse.includes('Cannot GET') || textResponse.includes('Cannot DELETE')) {
+              throw new Error('Admin routes not properly mounted. Check server configuration.');
+            } else {
+              throw new Error('Candidate not found or delete endpoint missing.');
+            }
+          } else if (res.status === 401) {
+            throw new Error('Authentication failed. Please login again.');
+          } else if (res.status === 403) {
+            throw new Error('Access denied. Admin privileges required.');
+          } else if (res.status >= 500) {
+            throw new Error(`Server error (${res.status}). Check server logs.`);
+          } else {
+            throw new Error(`Request failed with status ${res.status}`);
+          }
+        }
+
+        // Handle successful JSON response
+        if (!res.ok) {
+          throw new Error(data.message || `Request failed with status ${res.status}`);
+        }
+
+        // Success
+        alert(data.message || 'Candidate deleted successfully');
+        console.log('✅ Candidate deleted successfully');
+
+        // Refresh the candidates list
+        await fetchCandidatesWithVotes();
+
+      } catch (error) {
+        console.error("❌ Error deleting candidate:", error);
+
+        // User-friendly error messages
+        if (error.message.includes('fetch')) {
+          alert("Network error: Unable to connect to server. Please check your connection and try again.");
+        } else if (error.message.includes('Admin routes not properly mounted')) {
+          alert("Server configuration error. Please contact the administrator.");
+        } else {
+          alert(`Error: ${error.message}`);
+        }
+      }
+    }
+
+    // Test function to verify admin routes are working
+    async function testAdminConnection() {
+      try {
+        console.log('🧪 Testing admin connection...');
+        const res = await fetch('/api/admin/check', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('🧪 Admin check status:', res.status);
+
+        if (res.ok) {
+          const data = await res.json();
+          console.log('✅ Admin connection successful:', data);
+          return true;
+        } else {
+          console.log('❌ Admin connection failed');
+          return false;
+        }
+      } catch (error) {
+        console.error('❌ Admin connection test error:', error);
+        return false;
+      }
+    }
+
+    // Call this to test your connection
+    // 
+
+    async function resetVotes() {
+      const confirmed = confirm("Are you sure you want to reset all votes? This cannot be undone.");
+      if (!confirmed) return;
+
+      try {
+        const resetVotesBtn = document.getElementById("resetVotesBtn");
+        resetVotesBtn.classList.add("loading");
+        resetVotesBtn.disabled = true;
+
+        const res = await fetch("/api/admin/reset", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to reset votes");
+        }
+
+        const data = await res.json();
+        alert(data.message);
+        fetchVoters();
+        fetchCandidatesWithVotes();
+      } catch (error) {
+        console.error("Error resetting votes:", error);
+        alert("Failed to reset votes");
+      } finally {
+        const resetVotesBtn = document.getElementById("resetVotesBtn");
+        resetVotesBtn.classList.remove("loading");
+        resetVotesBtn.disabled = false;
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+
+    async function fetchUsers() {
+      try {
+        const res = await fetch("/api/admin/users", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch users");
+        }
+
+        const data = await res.json();
+        const list = document.getElementById("usersList");
+        list.innerHTML = "";
+
+        if (data.users.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "No users found";
+          list.appendChild(li);
+          return;
+        }
+
+        data.users.forEach(user => {
+          const li = document.createElement("li");
+          const adminBadge = user.isAdmin ? '<span style="background: var(--primary-color); color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;">ADMIN</span>' : '';
+          const votedBadge = user.hasVoted ? '<span style="color: var(--success); font-weight: 500;">✓ Voted</span>' : '<span style="color: #999;">Not voted</span>';
+
+          li.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <span>${user.email}${adminBadge}</span>
+              <span>${votedBadge}</span>
+            </div>
+          `;
+          list.appendChild(li);
+        });
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    }
+
+    async function makeAdmin() {
+      const emailInput = document.getElementById("makeAdminEmail");
+      if (!emailInput) {
+        alert("Email input field not found");
+        return;
+      }
+
+      const email = emailInput.value ? emailInput.value.trim() : "";
+      if (!email) {
+        alert("Please enter an email address");
+        return;
+      }
+
+      try {
+        const makeAdminBtn = document.getElementById("makeAdminBtn");
+        makeAdminBtn.classList.add("loading");
+        makeAdminBtn.disabled = true;
+
+        const res = await fetch("/api/admin/make-admin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to make user admin");
+        }
+
+        alert(data.message);
+        emailInput.value = "";
+        fetchUsers();
+      } catch (error) {
+        console.error("Error making user admin:", error);
+        alert(error.message || "Failed to make user admin");
+      } finally {
+        const makeAdminBtn = document.getElementById("makeAdminBtn");
+        makeAdminBtn.classList.remove("loading");
+        makeAdminBtn.disabled = false;
+      }
+    }
+    // Add single student
+    async function addStudent() {
+      const email = document.getElementById("studentEmail").value.trim();
+      const studentId = document.getElementById("studentId").value.trim();
+      const name = document.getElementById("studentName").value.trim();
+      const department = document.getElementById("studentDepartment").value.trim();
+
+      if (!email) {
+        alert("Please enter a student email");
+        return;
+      }
+
+      try {
+        const addStudentBtn = document.getElementById("addStudentBtn");
+        addStudentBtn.classList.add("loading");
+        addStudentBtn.disabled = true;
+
+        const res = await fetch("/api/admin/students", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            email,
+            studentId: studentId || undefined,
+            name: name || undefined,
+            department: department || undefined
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to add student");
+        }
+
+        alert(data.message);
+        // Clear form
+        document.getElementById("studentEmail").value = "";
+        document.getElementById("studentId").value = "";
+        document.getElementById("studentName").value = "";
+        document.getElementById("studentDepartment").value = "";
+
+        fetchStudents();
+      } catch (error) {
+        console.error("Error adding student:", error);
+        alert(error.message || "Failed to add student");
+      } finally {
+        const addStudentBtn = document.getElementById("addStudentBtn");
+        addStudentBtn.classList.remove("loading");
+        addStudentBtn.disabled = false;
+      }
+    }
+
+    // Bulk upload students
+    async function bulkUploadStudents() {
+      const bulkData = document.getElementById("bulkStudents").value.trim();
+
+      if (!bulkData) {
+        alert("Please enter student data in JSON format");
+        return;
+      }
+
+      try {
+        const students = JSON.parse(bulkData);
+
+        if (!Array.isArray(students)) {
+          throw new Error("Data must be an array of student objects");
+        }
+
+        const bulkUploadBtn = document.getElementById("bulkUploadBtn");
+        bulkUploadBtn.classList.add("loading");
+        bulkUploadBtn.disabled = true;
+
+        const res = await fetch("/api/admin/students/bulk", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ students })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to upload students");
+        }
+
+        alert(data.message);
+        if (data.results && data.results.errors.length > 0) {
+          console.warn("Upload errors:", data.results.errors);
+        }
+
+        document.getElementById("bulkStudents").value = "";
+        fetchStudents();
+      } catch (error) {
+        console.error("Error in bulk upload:", error);
+        alert(error.message || "Failed to parse JSON or upload students");
+      } finally {
+        const bulkUploadBtn = document.getElementById("bulkUploadBtn");
+        bulkUploadBtn.classList.remove("loading");
+        bulkUploadBtn.disabled = false;
+      }
+    }
+
+    // Fetch students list
+    async function fetchStudents() {
+      try {
+        const res = await fetch("/api/admin/students", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch students");
+        }
+
+        const data = await res.json();
+        const list = document.getElementById("studentsList");
+        list.innerHTML = "";
+
+        if (data.students.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "No students in database";
+          list.appendChild(li);
+          return;
+        }
+
+        data.students.forEach(student => {
+          const li = document.createElement("li");
+          const registeredBadge = student.isRegistered ?
+            '<span style="background: var(--success); color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;">REGISTERED</span>' :
+            '<span style="background: #ccc; color: #666; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;">NOT REGISTERED</span>';
+
+          li.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <div>
+            <span>${student.email}</span>
+            ${student.name ? `<br><small style="color: #666;">${student.name}</small>` : ''}
+            ${student.studentId ? `<br><small style="color: #666;">ID: ${student.studentId}</small>` : ''}
+            ${student.department ? `<br><small style="color: #666;">Dept: ${student.department}</small>` : ''}
+          </div>
+          <div>
+            ${registeredBadge}
+            <button onclick="removeStudent('${student.email}')" style="background: var(--error); padding: 4px 8px; margin-left: 10px; font-size: 12px;">Remove</button>
+          </div>
+        </div>
+      `;
+          list.appendChild(li);
+        });
+      } catch (error) {
+        console.error("Error fetching students:", error);
+      }
+    }
+
+    // Remove student
+    async function removeStudent(email) {
+      const confirmed = confirm(`Are you sure you want to remove student: ${email}?`);
+      if (!confirmed) return;
+
+      try {
+        const res = await fetch(`/api/admin/students/${encodeURIComponent(email)}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to remove student");
+        }
+
+        alert(data.message);
+        fetchStudents();
+      } catch (error) {
+        console.error("Error removing student:", error);
+        alert(error.message || "Failed to remove student");
+      }
+    }
+
+    // Update the init function to also fetch students
+    (async function init() {
+      const isAdmin = await checkAdminAccess();
+      if (isAdmin) {
+        fetchVoters();
+        fetchCandidatesWithVotes();
+        fetchUsers();
+        fetchStudents(); // Add this line
+      }
+    })();
+
+    async function removeAdmin() {
+      const emailInput = document.getElementById("removeAdminEmail");
+      if (!emailInput) {
+        alert("Email input field not found");
+        return;
+      }
+
+      const email = emailInput.value ? emailInput.value.trim() : "";
+      if (!email) {
+        alert("Please enter an email address");
+        return;
+      }
+
+      const confirmed = confirm(`Are you sure you want to remove admin privileges from ${email}?`);
+      if (!confirmed) return;
+
+      try {
+        const removeAdminBtn = document.getElementById("removeAdminBtn");
+        removeAdminBtn.classList.add("loading");
+        removeAdminBtn.disabled = true;
+
+        const res = await fetch("/api/admin/remove-admin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to remove admin privileges");
+        }
+
+        alert(data.message);
+        emailInput.value = "";
+        fetchUsers();
+      } catch (error) {
+        console.error("Error removing admin privileges:", error);
+        alert(error.message || "Failed to remove admin privileges");
+      } finally {
+        const removeAdminBtn = document.getElementById("removeAdminBtn");
+        removeAdminBtn.classList.remove("loading");
+        removeAdminBtn.disabled = false;
+      }
+    }
+
+    // Initialize page
+    (async function init() {
+      const isAdmin = await checkAdminAccess();
+      if (isAdmin) {
+        fetchVoters();
+        fetchCandidatesWithVotes();
+        fetchUsers();
+      }
+    })();
+
+
+    // Add these functions to your script
+    let excelParserLoaded = false;
+
+    async function loadExcelParser() {
+      return new Promise((resolve, reject) => {
+        if (typeof XLSX !== 'undefined') {
+          excelParserLoaded = true;
+          return resolve();
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+
+        // Set timeout for the script load
+        const timeout = setTimeout(() => {
+          script.onerror = null;
+          reject(new Error('Timeout loading Excel parser'));
+        }, 10000); // 10 second timeout
+
+        script.onload = () => {
+          clearTimeout(timeout);
+          excelParserLoaded = true;
+          resolve();
+        };
+
+        script.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Failed to load Excel parser library'));
+        };
+
+        document.head.appendChild(script);
+      });
+    }
+
+    async function uploadExcel() {
+      const fileInput = document.getElementById('excelUpload');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert('Please select an Excel file first');
+        return;
+      }
+
+      try {
+        const excelUploadBtn = document.getElementById('excelUploadBtn');
+        excelUploadBtn.classList.add("loading");
+        excelUploadBtn.disabled = true;
+
+        // Try to load the Excel parser
+        try {
+          await loadExcelParser();
+          // If we get here, the parser loaded successfully
+          const data = await readExcelFile(file);
+          await sendExcelData(data);
+        } catch (error) {
+          console.warn("Excel parser load failed, showing fallback:", error);
+          // Show the fallback option
+          document.getElementById('excelFallback').style.display = 'block';
+          excelUploadBtn.style.display = 'none';
+          throw error;
+        }
+      } catch (error) {
+        console.error("Error in Excel upload:", error);
+        alert(error.message || "Failed to process Excel file");
+      } finally {
+        const excelUploadBtn = document.getElementById('excelUploadBtn');
+        excelUploadBtn.classList.remove("loading");
+        excelUploadBtn.disabled = false;
+      }
+    }
+
+    async function uploadExcelDirect() {
+      const fileInput = document.getElementById('excelUpload');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert('Please select an Excel file first');
+        return;
+      }
+
+      try {
+        const excelDirectUploadBtn = document.getElementById('excelDirectUploadBtn');
+        excelDirectUploadBtn.classList.add("loading");
+        excelDirectUploadBtn.disabled = true;
+
+        // Read the file as binary and send directly to server
+        const fileData = await readFileAsArrayBuffer(file);
+        const formData = new FormData();
+        formData.append('excelFile', file);
+
+        const res = await fetch("/api/admin/students/bulk-excel", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          throw new Error(result.message || "Failed to upload Excel file");
+        }
+
+        alert(result.message);
+        if (result.results && result.results.errors.length > 0) {
+          console.warn("Upload errors:", result.results.errors);
+        }
+
+        // Reset file input
+        fileInput.value = '';
+        document.getElementById('excelFileName').textContent = 'No file chosen';
+        document.getElementById('excelFallback').style.display = 'none';
+        document.getElementById('excelUploadBtn').style.display = 'block';
+        fetchStudents();
+      } catch (error) {
+        console.error("Error in direct Excel upload:", error);
+        alert(error.message || "Failed to upload Excel file");
+      } finally {
+        const excelDirectUploadBtn = document.getElementById('excelDirectUploadBtn');
+        excelDirectUploadBtn.classList.remove("loading");
+        excelDirectUploadBtn.disabled = false;
+      }
+    }
+
+    function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(new Error('Error reading file'));
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    async function readExcelFile(file) {
+      const data = await readFileAsArrayBuffer(file);
+      const workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
+
+      // Get first sheet
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      // Convert to JSON
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+      // Map to our expected format
+      return jsonData.map(row => {
+        // Handle different possible column names
+        const email = row.email || row.Email || row['Email Address'] || row['E-mail'];
+        const studentId = row.studentId || row['Student ID'] || row.id || row.ID;
+        const name = row.name || row.Name || row['Full Name'];
+        const department = row.department || row.Department || row.dept || row.Dept;
+
+        if (!email) {
+          throw new Error('Excel file must contain an email column');
+        }
+
+        return {
+          email: email.toString().trim(),
+          studentId: studentId ? studentId.toString().trim() : undefined,
+          name: name ? name.toString().trim() : undefined,
+          department: department ? department.toString().trim() : undefined
+        };
+      });
+    }
+    // Add this to your admin.html script section
+    async function syncToSupabase() {
+      const confirmed = confirm("Are you sure you want to sync all data to Supabase? This may take a while.");
+      if (!confirmed) return;
+
+      try {
+        const syncBtn = document.getElementById("syncBtn");
+        syncBtn.classList.add("loading");
+        syncBtn.disabled = true;
+
+        const res = await fetch("/api/admin/sync-to-supabase", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to sync data");
+        }
+
+        const data = await res.json();
+        alert(data.message || "Sync completed successfully");
+      } catch (error) {
+        console.error("Error syncing data:", error);
+        alert("Failed to sync data: " + error.message);
+      } finally {
+        const syncBtn = document.getElementById("syncBtn");
+        syncBtn.classList.remove("loading");
+        syncBtn.disabled = false;
+      }
+    }
+
+    async function sendExcelData(data) {
+      const res = await fetch("/api/admin/students/bulk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ students: data })
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.message || "Failed to upload students from Excel");
+      }
+
+      alert(result.message);
+      if (result.results && result.results.errors.length > 0) {
+        console.warn("Upload errors:", result.results.errors);
+      }
+
+      // Reset file input
+      document.getElementById('excelUpload').value = '';
+      document.getElementById('excelFileName').textContent = 'No file chosen';
+      fetchStudents();
+    }
+
+    testAdminConnection();
+  </script>
+</body>
+
+</html>

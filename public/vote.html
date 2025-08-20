@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vote - Voting App</title>
+  <style>
+    :root {
+      --primary-color: #4CAF50;
+      --primary-hover: #45a049;
+      --background: #f9f9f9;
+      --card-bg: #ffffff;
+      --text: #333333;
+      --error: #f44336;
+      --success: #4CAF50;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --border-radius: 8px;
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 30px;
+      transform: translateY(0);
+      transition: transform 0.5s ease, box-shadow 0.5s ease;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary-color), #2196F3, #9C27B0);
+      background-size: 200% 100%;
+      animation: gradientBorder 3s linear infinite;
+    }
+
+    @keyframes gradientBorder {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      position: relative;
+      padding-bottom: 10px;
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background-color: #eee;
+    }
+
+    h1, h2 {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 20px 0 15px;
+      text-align: center;
+    }
+
+    .user-welcome {
+      margin-bottom: 20px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .user-email {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .candidates {
+      margin: 20px 0;
+    }
+
+    .candidate {
+      margin-bottom: 15px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .candidate:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .candidate.selected {
+      background-color: rgba(76, 175, 80, 0.1);
+      border-color: var(--primary-color);
+      border-width: 2px;
+    }
+
+    .candidate.selected::before {
+      content: '✓';
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+
+    .candidate-name {
+      font-weight: 500;
+      font-size: 16px;
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px 15px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button::after {
+      content: '';
+      position: absolute;
+      background-color: rgba(255, 255, 255, 0.3);
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: -100%;
+      transform: skewX(-15deg);
+      transition: all 0.5s ease;
+    }
+
+    button:hover:not(:disabled)::after {
+      left: 100%;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .logout-btn {
+      background-color: var(--error);
+      width: auto;
+      padding: 8px 15px;
+      font-size: 14px;
+    }
+
+    .logout-btn:hover {
+      background-color: #d32f2f;
+    }
+
+    .alert {
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: var(--border-radius);
+      font-size: 15px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .success {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: var(--success);
+      border-left: 4px solid var(--success);
+    }
+
+    .error {
+      background-color: rgba(244, 67, 54, 0.2);
+      color: var(--error);
+      border-left: 4px solid var(--error);
+    }
+
+    .info {
+      background-color: rgba(33, 150, 243, 0.2);
+      color: #2196F3;
+      border-left: 4px solid #2196F3;
+    }
+
+    .results {
+      margin-top: 30px;
+    }
+
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+    }
+
+    .result-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .result-bar-container {
+      height: 10px;
+      background-color: #eee;
+      border-radius: 5px;
+      margin-top: 5px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .result-bar {
+      height: 100%;
+      background-color: var(--primary-color);
+      border-radius: 5px;
+      transition: width 1s ease-in-out;
+    }
+
+    .result-name {
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .result-count {
+      margin-left: 15px;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .result-percent {
+      margin-left: 15px;
+      width: 50px;
+      text-align: right;
+      font-weight: 600;
+    }
+
+    .debug-info {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: var(--border-radius);
+      font-family: monospace;
+      font-size: 14px;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .debug-toggle {
+      font-size: 12px;
+      color: #6c757d;
+      text-decoration: underline;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 15px;
+      opacity: 0.7;
+      transition: var(--transition);
+    }
+
+    .debug-toggle:hover {
+      opacity: 1;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      position: absolute;
+      top: 50%;
+      right: 15px;
+      transform: translateY(-50%);
+    }
+
+    @keyframes spin {
+      to { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    .btn-content {
+      transition: var(--transition);
+    }
+
+    button.loading .spinner {
+      display: block;
+    }
+
+    button.loading .btn-content {
+      padding-right: 25px;
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 0;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(76, 175, 80, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .result-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .result-count, .result-percent {
+        margin-left: 0;
+        margin-top: 5px;
+      }
+
+      .result-percent {
+        width: auto;
+        text-align: left;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #121212;
+        --card-bg: #1e1e1e;
+        --text: #f0f0f0;
+        --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      .candidate {
+        border-color: #333;
+      }
+
+      .candidate.selected {
+        background-color: rgba(76, 175, 80, 0.2);
+      }
+
+      .result-item {
+        border-color: #333;
+      }
+
+      .result-bar-container {
+        background-color: #333;
+      }
+
+      .header::after {
+        background-color: #333;
+      }
+
+      .debug-info {
+        background-color: #2a2a2a;
+        border-color: #333;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Voting Page</h1>
+      <button class="logout-btn" onclick="logout()">
+        <span class="btn-content">Logout</span>
+      </button>
+    </div>
+    
+    <div id="loadingSection" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading...</p>
+    </div>
+    
+    <div id="votingSection" style="display: none;">
+      <p class="user-welcome">Welcome, <span id="userEmail" class="user-email"></span>!</p>
+      
+      <div id="messageContainer"></div>
+      
+      <div id="notVotedSection">
+        <h2>Select a Candidate</h2>
+        <div id="candidatesList" class="candidates"></div>
+        <button id="voteButton" onclick="submitVote()" disabled>
+          <span class="btn-content">Submit Vote</span>
+          <span class="spinner"></span>
+        </button>
+      </div>
+      
+      <div id="alreadyVotedSection" style="display: none;">
+        <div class="alert success">
+          You have already voted. Thank you for participating!
+        </div>
+      </div>
+    </div>
+    
+    <div id="resultsSection" class="results" style="display: none;">
+      <h2>Election Results</h2>
+      <div id="resultsList"></div>
+    </div>
+    
+    <div class="debug-toggle" onclick="toggleDebugInfo()">Show/Hide Debug Info</div>
+    <div id="debugInfo" class="debug-info"></div>
+  </div>
+  
+  <script>
+    const token = localStorage.getItem("token");
+    let selectedCandidate = null;
+    
+    // Debug log function
+    function debugLog(message, data = null) {
+      const debugInfo = document.getElementById("debugInfo");
+      const timestamp = new Date().toLocaleTimeString();
+      let logMessage = `[${timestamp}] ${message}`;
+      
+      if (data) {
+        if (typeof data === 'object') {
+          logMessage += `: ${JSON.stringify(data, null, 2)}`;
+        } else {
+          logMessage += `: ${data}`;
+        }
+      }
+      
+      const logEntry = document.createElement("div");
+      logEntry.textContent = logMessage;
+      debugInfo.appendChild(logEntry);
+      console.log(message, data);
+    }
+    
+    // Toggle debug info visibility
+    function toggleDebugInfo() {
+      const debugInfo = document.getElementById("debugInfo");
+      debugInfo.style.display = debugInfo.style.display === "none" ? "block" : "none";
+    }
+    
+    // Check authentication
+    async function checkAuth() {
+      debugLog("Checking authentication");
+      try {
+        if (!token) {
+          debugLog("No token found in localStorage");
+          window.location.href = "/login";
+          return;
+        }
+        
+        debugLog("Sending auth check request", { tokenLength: token.length });
+        const res = await fetch("/api/vote/check", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          debugLog("Auth check failed", { status: res.status, statusText: res.statusText, errorText });
+          throw new Error("Authentication failed");
+        }
+        
+        const userData = await res.json();
+        debugLog("Authentication successful", { email: userData.email, hasVoted: userData.hasVoted });
+        document.getElementById("userEmail").textContent = userData.email;
+        
+        // Show appropriate sections based on voting status
+        if (userData.hasVoted) {
+          document.getElementById("notVotedSection").style.display = "none";
+          document.getElementById("alreadyVotedSection").style.display = "block";
+          fetchResults();
+        }
+        
+        // Hide loading section and show voting section
+        document.getElementById("loadingSection").style.display = "none";
+        document.getElementById("votingSection").style.display = "block";
+        
+        return userData;
+      } catch (error) {
+        debugLog("Authentication error", { message: error.message, stack: error.stack });
+        showMessage("Authentication failed. Please login again.", "error");
+        setTimeout(() => {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+        }, 2000);
+      }
+    }
+    
+    // Fetch candidates
+    async function fetchCandidates() {
+      debugLog("Fetching candidates");
+      try {
+        const res = await fetch("/api/vote/candidates");
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          debugLog("Failed to fetch candidates", { status: res.status, statusText: res.statusText, errorText });
+          throw new Error("Failed to fetch candidates");
+        }
+        
+        const data = await res.json();
+        debugLog("Candidates fetched successfully", { candidatesCount: data.candidates?.length });
+        
+        const candidatesList = document.getElementById("candidatesList");
+        candidatesList.innerHTML = "";
+        
+        if (!data.candidates || data.candidates.length === 0) {
+          candidatesList.innerHTML = "<p>No candidates available at this time.</p>";
+          return;
+        }
+        
+        data.candidates.forEach(candidate => {
+          const div = document.createElement("div");
+          div.className = "candidate";
+          div.dataset.name = candidate;
+          div.textContent = candidate;
+          div.addEventListener("click", selectCandidate);
+          candidatesList.appendChild(div);
+        });
+      } catch (error) {
+        debugLog("Error fetching candidates", { message: error.message, stack: error.stack });
+        showMessage("Failed to load candidates", "error");
+      }
+    }
+    
+    // Select a candidate
+    function selectCandidate(event) {
+      // Deselect previously selected candidate
+      const candidates = document.querySelectorAll(".candidate");
+      candidates.forEach(c => c.classList.remove("selected"));
+      
+      // Select this candidate
+      event.target.classList.add("selected");
+      selectedCandidate = event.target.dataset.name;
+      debugLog("Candidate selected", { candidate: selectedCandidate });
+      
+      // Enable vote button
+      document.getElementById("voteButton").disabled = false;
+    }
+    
+    // Submit vote
+    async function submitVote() {
+      if (!selectedCandidate) {
+        debugLog("Attempted to submit vote with no candidate selected");
+        return;
+      }
+      
+      debugLog("Submitting vote", { candidateName: selectedCandidate });
+      
+      try {
+        // Disable the vote button during submission
+        const voteButton = document.getElementById("voteButton");
+        voteButton.disabled = true;
+        voteButton.classList.add("loading");
+        
+        // Check token validity before attempting submission
+        if (!token) {
+          debugLog("Token missing before vote submission");
+          throw new Error("Authentication token missing. Please login again.");
+        }
+        
+        // Log the request details
+        const requestData = { candidateName: selectedCandidate };
+        debugLog("Vote request data", requestData);
+        
+        // Send the request
+        const res = await fetch("/api/vote/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(requestData)
+        });
+        
+        // Try to get the response body as text first
+        const responseText = await res.text();
+        debugLog("Vote submission response", { 
+          status: res.status, 
+          statusText: res.statusText,
+          headers: Object.fromEntries([...res.headers]),
+          body: responseText 
+        });
+        
+        // Parse the response if it's JSON
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (e) {
+          debugLog("Failed to parse response as JSON", { error: e.message });
+          data = { message: responseText || "Unknown response from server" };
+        }
+        
+        if (!res.ok) {
+          throw new Error(data.message || `Server error: ${res.status} ${res.statusText}`);
+        }
+        
+        showMessage(data.message || "Vote submitted successfully", "success");
+        document.getElementById("notVotedSection").style.display = "none";
+        document.getElementById("alreadyVotedSection").style.display = "block";
+        fetchResults();
+      } catch (error) {
+        debugLog("Error submitting vote", { message: error.message, stack: error.stack });
+        showMessage(error.message || "Failed to submit vote", "error");
+      } finally {
+        // Always remove loading state and re-enable button if needed
+        const voteButton = document.getElementById("voteButton");
+        voteButton.classList.remove("loading");
+        // Only re-enable if not successfully voted
+        if (document.getElementById("notVotedSection").style.display !== "none") {
+          voteButton.disabled = false;
+        }
+      }
+    }
+    
+    // Fetch voting results
+    async function fetchResults() {
+      debugLog("Fetching voting results");
+      try {
+        const res = await fetch("/api/vote/results", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          debugLog("Failed to fetch results", { status: res.status, statusText: res.statusText, errorText });
+          throw new Error("Failed to fetch results");
+        }
+        
+        const data = await res.json();
+        debugLog("Results fetched successfully", { resultsCount: data.results?.length });
+        
+        const resultsList = document.getElementById("resultsList");
+        resultsList.innerHTML = "";
+        
+        if (!data.results || data.results.length === 0) {
+          resultsList.innerHTML = "<p>No results available yet.</p>";
+          return;
+        }
+        
+        data.results.forEach(result => {
+          const div = document.createElement("div");
+          div.className = "result-item";
+          div.innerHTML = `
+            <span>${result.candidateName}</span>
+            <span>${result.count} vote${result.count !== 1 ? 's' : ''}</span>
+          `;
+          resultsList.appendChild(div);
+        });
+        
+        document.getElementById("resultsSection").style.display = "block";
+      } catch (error) {
+        debugLog("Error fetching results", { message: error.message, stack: error.stack });
+        showMessage("Failed to load results", "error");
+      }
+    }
+    
+    // Show message
+    function showMessage(message, type) {
+      debugLog("Showing message", { message, type });
+      const container = document.getElementById("messageContainer");
+      const div = document.createElement("div");
+      div.className = `alert ${type}`;
+      div.textContent = message;
+      container.innerHTML = "";
+      container.appendChild(div);
+      
+      // Auto clear after 5 seconds
+      setTimeout(() => {
+        div.remove();
+      }, 5000);
+    }
+    
+    // Logout function
+    function logout() {
+      debugLog("User logging out");
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    
+    // Check network connectivity
+    function checkConnectivity() {
+      const networkStatus = navigator.onLine ? "online" : "offline";
+      debugLog("Network status", { status: networkStatus });
+      if (!navigator.onLine) {
+        showMessage("You are currently offline. Please check your internet connection.", "error");
+      }
+    }
+    
+    // Initialize
+    (async function init() {
+      debugLog("Initializing application");
+      checkConnectivity();
+      
+      const userData = await checkAuth();
+      if (userData && !userData.hasVoted) {
+        await fetchCandidates();
+      }
+    })();
+    
+    // Add network status monitoring
+    window.addEventListener('online', () => {
+      debugLog("Network connection restored");
+      showMessage("Your internet connection has been restored.", "success");
+    });
+    
+    window.addEventListener('offline', () => {
+      debugLog("Network connection lost");
+      showMessage("You are currently offline. Please check your internet connection.", "error");
+    });
+  </script>
+</body>
+</html>
