@@ -238,21 +238,21 @@ router.delete("/candidates/:name", verifyAdmin, async (req, res) => {
   console.log(`🗑️ Delete candidate request received for: ${req.params.name}`);
   console.log(`🗑️ Raw params:`, req.params);
   console.log(`🗑️ User making request:`, req.user?.email);
-
+  
   try {
     // Decode and trim the name
     const name = decodeURIComponent(req.params.name).trim();
     console.log(`🔍 Processed candidate name: "${name}"`);
-
+    
     // First, let's see what candidates exist
     const allCandidates = await Candidate.find({}).select('name');
     console.log(`📋 All candidates in DB:`, allCandidates.map(c => `"${c.name}"`));
-
+    
     // Check if candidate exists (case-insensitive)
     const candidate = await Candidate.findOne({
       name: { $regex: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
     });
-
+    
     if (!candidate) {
       console.log(`❌ Candidate not found: "${name}"`);
       console.log(`💡 Available candidates: ${allCandidates.map(c => c.name).join(', ')}`);
@@ -262,37 +262,43 @@ router.delete("/candidates/:name", verifyAdmin, async (req, res) => {
         availableCandidates: allCandidates.map(c => c.name)
       });
     }
-
-    console.log(`✅ Candidate found: "${candidate.name}" (ID: ${candidate._id})`);
-
+    
+    console.log(`✅ Candidate found: "${candidate.name}" (ID: ${candidate._id}, Supabase ID: ${candidate.supabaseId})`);
+    
     // Check if candidate has received votes
     const voteCount = await Vote.countDocuments({ candidate: candidate._id });
     console.log(`📊 Vote count for ${candidate.name}: ${voteCount}`);
-
+    
     if (voteCount > 0) {
       console.log(`⚠️ Cannot delete candidate ${candidate.name} - has ${voteCount} votes`);
       return res.status(400).json({
         message: `Cannot delete candidate ${candidate.name}. They have received ${voteCount} vote(s). Reset votes first if you want to delete this candidate.`
       });
     }
-
-    // Delete the candidate using the found candidate's exact name
+    
+    // Store candidate info before deletion for response
+    const candidateInfo = {
+      name: candidate.name,
+      id: candidate._id,
+      supabaseId: candidate.supabaseId
+    };
+    
+    // Delete the candidate using the found candidate's ID
+    // The post-hook will automatically handle Supabase deletion
     const deleteResult = await Candidate.findOneAndDelete({ _id: candidate._id });
     console.log(`✅ Delete result:`, deleteResult ? 'Success' : 'Failed');
-
+    
     if (!deleteResult) {
       throw new Error('Delete operation failed - candidate not removed');
     }
-
-    console.log(`✅ Successfully deleted candidate: "${candidate.name}"`);
-
+    
+    console.log(`✅ Successfully deleted candidate: "${candidateInfo.name}" from both MongoDB and Supabase`);
+    
     res.json({
-      message: `Candidate ${candidate.name} deleted successfully`,
-      deletedCandidate: {
-        name: candidate.name,
-        id: candidate._id
-      }
+      message: `Candidate ${candidateInfo.name} deleted successfully from both MongoDB and Supabase`,
+      deletedCandidate: candidateInfo
     });
+    
   } catch (err) {
     console.error(`❌ Error deleting candidate:`, err);
     res.status(500).json({

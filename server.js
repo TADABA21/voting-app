@@ -32,7 +32,6 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/results", resultsRoutes);
 
 // Sync endpoint
-// Sync endpoint
 app.post("/api/sync-to-supabase", async (req, res) => {
   try {
     await syncAllToSupabase();
@@ -146,7 +145,7 @@ app.get("/results", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "results.html"));
 });
 
-// Handle all other routes - serve index.html for client-side routing
+// Handle all other routes - Express 5 compatible with named parameter
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
